@@ -2475,6 +2475,168 @@ body.mobile .victory-ending { font-size: 10px; }
 body.mobile .victory-ending .ending-name { font-size: 18px; }
 
 
+/* ================= CINEMATIC COMIC ================= */
+.cinematic {
+  position: fixed; inset: 0; z-index: 120;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(74, 52, 36, .35), transparent 62%),
+    rgba(3, 3, 5, .96);
+  opacity: 0; visibility: hidden;
+  transition: opacity .45s ease, visibility .45s ease;
+}
+.cinematic.on { opacity: 1; visibility: visible; }
+.cinema-shell {
+  position: relative;
+  width: min(1120px, 95vw);
+  height: min(730px, 93vh);
+  display: flex; flex-direction: column;
+  padding: 16px 18px 12px;
+  background:
+    linear-gradient(180deg, rgba(20, 14, 20, .98), rgba(7, 5, 9, .99));
+  border: 1px solid rgba(201, 164, 92, .45);
+  box-shadow: 0 0 0 1px rgba(201, 164, 92, .08), 0 0 70px rgba(0, 0, 0, .8);
+}
+.cinema-shell::before {
+  content: ""; position: absolute; inset: 7px;
+  border: 1px solid rgba(201, 164, 92, .14); pointer-events: none;
+}
+.cinema-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 3px 9px; flex: 0 0 auto;
+}
+.cinema-kicker {
+  color: var(--gold); font-size: 10px; letter-spacing: .32em;
+  text-transform: uppercase;
+}
+.cinema-count { color: var(--muted); font-size: 10px; letter-spacing: .22em; }
+.cinema-stage {
+  display: grid; grid-template-columns: 1.62fr .88fr; gap: 12px;
+  flex: 1 1 auto; min-height: 0;
+}
+.cinema-panel {
+  position: relative; margin: 0; overflow: hidden;
+  background: #07060a;
+  border: 1px solid rgba(201, 164, 92, .36);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .35);
+}
+.cinema-panel.main { min-height: 0; }
+.cinema-panel.detail { flex: 0 0 40%; min-height: 0; }
+.cinema-art { position: absolute; inset: 0; overflow: hidden; }
+.cinema-art .cine-svg {
+  display: block; width: 100%; height: 100%;
+  animation: cinemaPan 13s ease-out both;
+}
+.cinema-panel.detail .cine-svg { animation-duration: 9s; animation-direction: alternate-reverse; }
+.cinema-ink {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,.018) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at 50% 45%, transparent 48%, rgba(0,0,0,.62) 100%);
+  mix-blend-mode: multiply;
+}
+.cinema-caption {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 72px 24px 20px;
+  background: linear-gradient(180deg, transparent, rgba(5, 4, 7, .94) 48%);
+  font-family: var(--serif-cn);
+  font-size: 21px; line-height: 1.75; letter-spacing: .04em;
+  color: var(--ivory);
+  animation: cinemaUp .85s .15s both;
+}
+.cinema-caption em { color: var(--gold); font-style: normal; }
+.cinema-caption .cine-final-title {
+  display: block; font-size: 50px; line-height: 1.2; letter-spacing: .14em;
+  color: var(--gold); text-align: center;
+  text-shadow: 0 0 40px rgba(201, 164, 92, .25);
+}
+.cinema-caption .cine-final-en {
+  display: block; margin-top: 4px; text-align: center;
+  font-family: var(--serif-en); font-size: 13px; letter-spacing: .42em;
+  color: var(--gold); opacity: .8;
+}
+.cinema-caption .cine-final-line {
+  display: block; margin-top: 18px; text-align: center;
+  font-size: 15px; color: var(--muted); letter-spacing: .1em;
+}
+.cinema-side { display: flex; flex-direction: column; gap: 11px; min-height: 0; }
+.cinema-note {
+  flex: 1 1 auto; min-height: 0; overflow: hidden;
+  padding: 12px 14px;
+  border-left: 1px solid rgba(201, 164, 92, .42);
+  background: linear-gradient(90deg, rgba(201, 164, 92, .045), transparent);
+  font-family: var(--serif-cn);
+  font-size: 12.5px; line-height: 1.95; color: #b7aa93;
+  animation: cinemaUp .85s .22s both;
+}
+.cinema-mark {
+  flex: 0 0 auto; color: var(--gold); opacity: .5;
+  font-size: 8px; letter-spacing: .3em; padding-left: 2px;
+}
+.cinema-bottom {
+  display: flex; align-items: center; gap: 14px;
+  flex: 0 0 auto; padding-top: 11px;
+}
+.cinema-skip {
+  appearance: none; background: none; border: 0;
+  color: var(--muted); font-family: var(--serif-en);
+  font-size: 9px; letter-spacing: .25em; cursor: pointer;
+  padding: 6px 2px;
+}
+.cinema-skip:hover { color: var(--gold); }
+.cinema-dots { display: flex; gap: 8px; align-items: center; }
+.cinema-dot {
+  width: 5px; height: 5px; border: 1px solid rgba(201, 164, 92, .45);
+  transform: rotate(45deg); transition: background .25s, box-shadow .25s;
+}
+.cinema-dot.on { background: var(--gold); box-shadow: 0 0 10px rgba(201, 164, 92, .65); }
+.cinema-actions { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+.cinema-hint { color: rgba(184, 171, 150, .38); font-size: 8px; letter-spacing: .24em; }
+.cinema-next {
+  appearance: none; cursor: pointer;
+  border: 1px solid rgba(201, 164, 92, .55);
+  background: rgba(201, 164, 92, .08);
+  color: var(--gold); font-family: var(--serif-cn);
+  font-size: 12px; letter-spacing: .16em; padding: 9px 18px;
+  transition: background .2s, border-color .2s;
+}
+.cinema-next .en { font-family: var(--serif-en); font-size: 8px; letter-spacing: .2em; margin-left: 7px; opacity: .65; }
+.cinema-next:hover { background: rgba(201, 164, 92, .16); border-color: var(--gold); }
+.cinema-stage.final { grid-template-columns: 1fr; }
+.cinema-stage.final .cinema-panel.detail,
+.cinema-stage.final .cinema-side { display: none; }
+.cinema-panel.main.final .cinema-caption {
+  top: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 20px 30px; background: linear-gradient(180deg, rgba(5, 4, 7, .24), rgba(5, 4, 7, .86));
+  text-align: center;
+}
+@keyframes cinemaPan {
+  from { transform: scale(1.045) translate3d(0, 0, 0); }
+  to { transform: scale(1.12) translate3d(-1.2%, -1%, 0); }
+}
+@keyframes cinemaUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 900px), (max-height: 560px) {
+  .cinematic { padding: 0; }
+  .cinema-shell { width: 100vw; height: 100vh; border: 0; padding: 8px 10px 6px; }
+  .cinema-shell::before { inset: 4px; }
+  .cinema-kicker { font-size: 8px; letter-spacing: .2em; }
+  .cinema-stage { grid-template-columns: 1fr; gap: 8px; }
+  .cinema-side { display: none; }
+  .cinema-caption { padding: 48px 14px 12px; font-size: 13px; line-height: 1.65; }
+  .cinema-caption .cine-final-title { font-size: 30px; }
+  .cinema-caption .cine-final-en { font-size: 9px; letter-spacing: .28em; }
+  .cinema-caption .cine-final-line { margin-top: 10px; font-size: 11px; }
+  .cinema-bottom { padding-top: 6px; gap: 9px; }
+  .cinema-hint { display: none; }
+  .cinema-next { padding: 7px 12px; font-size: 11px; }
+  .cinema-dot { width: 4px; height: 4px; }
+}
+body.mobile .cinema-caption { font-size: 14px; }
+
 </style>
 </head>
 <body class="title-mode">
@@ -2827,6 +2989,7 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
           <div class="guide-actions">
             <button type="button" id="guide-start" class="deco-btn">挑选今晚的身份 <span class="en">CHOOSE YOUR GUISE</span></button>
             <button type="button" id="guide-moves" class="deco-btn ghost move-btn">招式速览 <span class="en">MOVE SHEET</span></button>
+            <button type="button" id="guide-cinema" class="deco-btn ghost cine-btn">回看序章 <span class="en">PROLOGUE</span></button>
             <button type="button" id="guide-back" class="deco-btn ghost">返回标题</button>
           </div>
           <div class="guide-foot">死亡后未花珍珠会存入衣帽间 · 遗物不保留 · 记录最高楼层、最长夜晚与通关次数</div>
@@ -2958,6 +3121,39 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
 
         <p class="move-note">三种守势都会积攒 <b>「断罪」</b>：攒满后下一击更痛。右上角 <b>「招式」</b> 或按 <b>H</b> 可随时打开；在关内查看时，战斗会暂停。</p>
         <button type="button" id="moves-ok" class="deco-btn">记住了 <span class="en">ENTER THE WAKE</span></button>
+      </div>
+    </div>
+
+    <!-- ================= CINEMATIC COMIC (prologue / endings) ================= -->
+    <div id="cinematic" class="cinematic" aria-hidden="true">
+      <div class="cinema-shell" role="dialog" aria-modal="true" aria-labelledby="cinema-kicker">
+        <div class="cinema-head">
+          <div class="cinema-kicker en" id="cinema-kicker">THE NIGHT THE DOORS CLOSED</div>
+          <div class="cinema-count en" id="cinema-count">1 / 5</div>
+        </div>
+        <div class="cinema-stage">
+          <figure class="cinema-panel main">
+            <div class="cinema-art" id="cinema-art"></div>
+            <div class="cinema-ink"></div>
+            <figcaption class="cinema-caption" id="cinema-caption"></figcaption>
+          </figure>
+          <aside class="cinema-side">
+            <figure class="cinema-panel detail">
+              <div class="cinema-art" id="cinema-detail-art"></div>
+              <div class="cinema-ink"></div>
+            </figure>
+            <div class="cinema-note" id="cinema-note"></div>
+            <div class="cinema-mark en">HÔTEL CENDRES · 1928</div>
+          </aside>
+        </div>
+        <div class="cinema-bottom">
+          <button type="button" id="cinema-skip" class="cinema-skip en">跳过 · SKIP</button>
+          <div class="cinema-dots" id="cinema-dots"></div>
+          <div class="cinema-actions">
+            <span class="cinema-hint en">CLICK / SPACE</span>
+            <button type="button" id="cinema-next" class="cinema-next">继续 <span class="en">NEXT</span></button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -3897,6 +4093,9 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
   function endingFor(choices) {
     const final = choices && choices[4] ? choices[4].id : null;
     const f = flagsOf(choices || []);
+    const values = [f.mercy, f.truth, f.power];
+    const top = Math.max.apply(null, values);
+    if (values.filter((v) => v === top).length > 1) return ENDINGS.exit;
     const d = dominant(f);
     if (d === 'mercy') return final === 'dance' ? ENDINGS.bride : ENDINGS.dawn;
     if (d === 'power') return final === 'burn' ? ENDINGS.seventh : ENDINGS.host;
@@ -6318,6 +6517,417 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
 </script>
 <script>
 /* ============================================================
+   GILDED REQUIEM — cinematics
+   Inline SVG comic panels for the prologue and six endings.
+   No external assets; every panel is drawn from primitives.
+   ============================================================ */
+(function (global) {
+  'use strict';
+  const CEN = (global.CEN = global.CEN || {});
+
+  const C = {
+    ink: '#07060a', night: '#0b0910', night2: '#050407',
+    gold: '#c9a45c', goldHi: '#f0d9a0', ivory: '#e8ddc4',
+    wine: '#6d202b', wineHi: '#a63c46', emerald: '#2f6b59',
+    silver: '#b9c4c2', blue: '#1a2733', pale: '#d9d2c0'
+  };
+  let uid = 0;
+
+  function frame(accent, inner, bg1, bg2) {
+    const id = 'cg' + (++uid);
+    const a = accent || C.gold;
+    return '<svg class="cine-svg" viewBox="0 0 900 560" preserveAspectRatio="xMidYMid slice" ' +
+      'xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+      '<defs>' +
+      '<linearGradient id="' + id + 'bg" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop stop-color="' + (bg1 || '#171019') + '"/><stop offset="1" stop-color="' + (bg2 || C.night2) + '"/></linearGradient>' +
+      '<radialGradient id="' + id + 'glow" cx="50%" cy="40%" r="72%">' +
+      '<stop stop-color="' + a + '" stop-opacity=".30"/><stop offset="1" stop-color="' + a + '" stop-opacity="0"/></radialGradient>' +
+      '<linearGradient id="' + id + 'light" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop stop-color="' + a + '" stop-opacity=".78"/><stop offset="1" stop-color="' + a + '" stop-opacity="0"/></linearGradient>' +
+      '</defs>' +
+      '<rect width="900" height="560" fill="url(#' + id + 'bg)"/>' +
+      inner +
+      '<rect width="900" height="560" fill="url(#' + id + 'glow)"/>' +
+      '<rect x="16" y="16" width="868" height="528" fill="none" stroke="' + a + '" stroke-opacity=".20"/>' +
+      '</svg>';
+  }
+
+  function rain(accent, n, seed) {
+    let out = '';
+    for (let i = 0; i < n; i++) {
+      const x = (seed * 37 + i * 73) % 900;
+      const y = (seed * 19 + i * 41) % 520;
+      out += '<line x1="' + x + '" y1="' + y + '" x2="' + (x - 7) + '" y2="' + (y + 22) +
+        '" stroke="' + accent + '" stroke-opacity=".16"/>';
+    }
+    return out;
+  }
+
+  function candle(x, y, h, accent) {
+    return '<g transform="translate(' + x + ' ' + y + ')">' +
+      '<rect x="-2" y="' + (-h) + '" width="4" height="' + h + '" fill="' + C.ivory + '" opacity=".8"/>' +
+      '<path d="M0 ' + (-h - 9) + ' Q6 ' + (-h - 1) + ' 0 ' + (-h + 4) + ' Q-6 ' + (-h - 1) + ' 0 ' + (-h - 9) + 'Z" fill="' + accent + '"/>' +
+      '<circle cx="0" cy="' + (-h - 2) + '" r="11" fill="' + accent + '" opacity=".13"/>' +
+      '</g>';
+  }
+
+  function scene(kind, accent) {
+    const a = accent || C.gold;
+    let inner = '';
+
+    if (kind === 'hotel') {
+      inner += '<circle cx="710" cy="112" r="48" fill="' + C.ivory + '" opacity=".08"/>';
+      inner += rain(a, 28, 7);
+      inner += '<g fill="' + C.night + '" stroke="' + a + '" stroke-opacity=".70">' +
+        '<path d="M120 560 V176 H780 V560"/>' +
+        '<path d="M120 176 L164 122 H736 L780 176"/>' +
+        '<path d="M285 560 V394 H615 V560"/>' +
+        '<path d="M330 394 V300 H570 V394"/>' +
+        '<path d="M390 560 V474 Q450 424 510 474 V560"/>' +
+        '</g>';
+      inner += '<g fill="' + a + '" opacity=".20">';
+      for (let r = 0; r < 3; r++) {
+        for (let i = 0; i < 7; i++) {
+          inner += '<rect x="' + (190 + i * 78) + '" y="' + (220 + r * 62) + '" width="34" height="42"/>';
+        }
+      }
+      inner += '</g>';
+      inner += '<g fill="' + a + '" opacity=".55">' +
+        '<rect x="190" y="220" width="34" height="42"/><rect x="658" y="282" width="34" height="42"/>' +
+        '<rect x="268" y="344" width="34" height="42"/><rect x="736" y="220" width="34" height="42"/>' +
+        '</g>';
+      inner += '<g stroke="' + C.ink + '" stroke-opacity=".55">' +
+        '<path d="M207 220 V262 M190 241 H224"/><path d="M675 282 V324 M658 303 H692"/>' +
+        '<path d="M285 344 V386 M268 365 H302"/><path d="M753 220 V262 M736 241 H770"/></g>';
+      inner += '<g>' +
+        '<path d="M404 560 H496 L526 500 H374Z" fill="' + C.wine + '" opacity=".55"/>' +
+        '<path d="M420 560 V520 M480 560 V520" stroke="' + a + '" stroke-opacity=".22"/>' +
+        '</g>';
+      inner += '<g transform="translate(334 500)" fill="' + C.ink + '" stroke="' + a + '" stroke-opacity=".45">' +
+        '<circle cx="0" cy="-38" r="11"/><path d="M-18 -26 L18 -26 L26 42 L-26 42Z"/>' +
+        '<circle cx="34" cy="-32" r="9"/><path d="M19 -22 L49 -22 L58 42 L12 42Z"/>' +
+        '<path d="M-38 -58 Q8 -88 58 -58" fill="none"/><path d="M-38 -58 V-14 M58 -58 V-14" fill="none"/>' +
+        '</g>';
+      inner += '<rect x="390" y="474" width="120" height="86" fill="url(#light)" opacity=".35"/>';
+      inner += '<g fill="' + a + '" font-family="Georgia,serif" text-anchor="middle">' +
+        '<text x="450" y="252" font-size="22" letter-spacing="7">HÔTEL CENDRES</text>' +
+        '<text x="450" y="280" font-size="10" letter-spacing="5" opacity=".7">PARIS · 1928</text></g>';
+      inner += '<g stroke="' + a + '" stroke-opacity=".35"><path d="M120 560 H780"/><path d="M80 560 H820"/></g>';
+      inner += '<g stroke="' + a + '" stroke-opacity=".5">' +
+        '<path d="M180 500 L450 560 M720 500 L450 560"/></g>';
+    } else if (kind === 'wedding') {
+      inner += '<path d="M150 560 V150 Q450 18 750 150 V560" fill="' + C.night + '" stroke="' + a + '" stroke-opacity=".55"/>';
+      inner += '<path d="M210 560 V180 Q450 70 690 180 V560" fill="' + C.night2 + '" opacity=".8"/>';
+      inner += '<g stroke="' + a + '" stroke-opacity=".25">' +
+        '<path d="M300 560 V250 Q450 178 600 250 V560"/></g>';
+      inner += '<circle cx="450" cy="196" r="44" fill="none" stroke="' + a + '" stroke-opacity=".8"/>';
+      inner += '<g stroke="' + a + '" stroke-opacity=".8"><path d="M450 196 V168 M450 196 L464 204"/></g>';
+      inner += '<text x="450" y="270" text-anchor="middle" fill="' + a + '" font-family="Georgia,serif" font-size="10" letter-spacing="4">TWELVE O’CLOCK</text>';
+      inner += '<g fill="' + C.ivory + '" opacity=".13"><path d="M0 560 L900 560 L900 470 L0 520Z"/></g>';
+      inner += '<g transform="translate(560 330)">' +
+        '<path d="M-22 220 Q-38 92 0 58 Q38 92 22 220Z" fill="' + C.ink + '" stroke="' + a + '" stroke-opacity=".5"/>' +
+        '<path d="M-24 70 Q0 38 24 70 L34 130 Q0 156 -34 130Z" fill="' + C.ivory + '" opacity=".88"/>' +
+        '<circle cx="0" cy="44" r="20" fill="' + C.ink + '" stroke="' + a + '" stroke-opacity=".55"/>' +
+        '<path d="M-30 28 Q0 -10 30 28 L52 240 Q24 258 0 244 Q-24 258 -52 240Z" fill="' + a + '" opacity=".14" stroke="' + a + '" stroke-opacity=".28"/>' +
+        '<path d="M0 62 V220" stroke="' + C.ivory + '" stroke-opacity=".35"/>' +
+        '</g>';
+      inner += candle(740, 520, 80, a) + candle(160, 520, 64, a);
+    } else if (kind === 'ballroom') {
+      inner += '<g stroke="' + a + '" stroke-opacity=".22">' +
+        '<path d="M0 560 L450 250 L900 560"/><path d="M0 470 H900"/><path d="M120 560 L450 330 L780 560"/></g>';
+      inner += '<g transform="translate(450 105)" fill="none" stroke="' + a + '">' +
+        '<path d="M0 0 V58" stroke-opacity=".6"/><ellipse cx="0" cy="66" rx="64" ry="14" stroke-opacity=".6"/>' +
+        '<ellipse cx="0" cy="88" rx="42" ry="10" stroke-opacity=".5"/>' +
+        '<path d="M-64 66 Q0 112 64 66" stroke-opacity=".35"/>';
+      for (let i = -4; i <= 4; i++) {
+        inner += '<circle cx="' + (i * 7) + '" cy="' + (74 + Math.abs(i) * 3) + '" r="2" fill="' + a + '" stroke="none"/>';
+      }
+      inner += '</g>';
+      const pairs = [[250, 430, -0.2], [450, 470, 0.1], [650, 420, -0.1]];
+      pairs.forEach((p, i) => {
+        inner += '<g transform="translate(' + p[0] + ' ' + p[1] + ') rotate(' + (p[2] * 30) + ')" fill="' + C.ink + '" stroke="' + a + '" stroke-opacity=".35">' +
+          '<circle cx="-16" cy="-62" r="10"/><path d="M-24 -50 L-4 -50 L8 34 L-36 34Z"/>' +
+          '<circle cx="18" cy="-66" r="9"/><path d="M10 -56 L28 -56 L38 26 L2 26Z"/>' +
+          '<path d="M-40 40 Q0 62 40 40" fill="none"/>' +
+          '</g>';
+      });
+      inner += '<g stroke="' + a + '" stroke-opacity=".16"><path d="M250 470 L250 540"/><path d="M450 510 L450 560"/><path d="M650 460 L650 540"/></g>';
+    } else if (kind === 'coat') {
+      inner += '<path d="M210 560 V150 Q450 20 690 150 V560" fill="none" stroke="' + a + '" stroke-opacity=".45"/>';
+      inner += '<path d="M250 560 V180 Q450 80 650 180 V560" fill="' + C.night2 + '" stroke="' + a + '" stroke-opacity=".25"/>';
+      inner += '<g transform="translate(450 310)">' +
+        '<path d="M-72 180 Q-88 44 -34 4 L0 26 L34 4 Q88 44 72 180Z" fill="' + C.ink + '" stroke="' + a + '" stroke-opacity=".6"/>' +
+        '<path d="M-34 4 L0 70 L34 4" fill="none" stroke="' + a + '" stroke-opacity=".6"/>' +
+        '<path d="M0 70 V180" stroke="' + C.ivory + '" stroke-opacity=".3"/>' +
+        '<circle cx="0" cy="96" r="3" fill="' + a + '"/><circle cx="0" cy="120" r="3" fill="' + a + '"/>' +
+        '<path d="M-62 40 Q-96 76 -80 150" fill="none" stroke="' + a + '" stroke-opacity=".4"/>' +
+        '<path d="M62 40 Q96 76 80 150" fill="none" stroke="' + a + '" stroke-opacity=".4"/>' +
+        '<path d="M-18 -8 Q0 -34 18 -8 Q12 18 0 20 Q-12 18 -18 -8Z" fill="' + C.ivory + '" opacity=".92"/>' +
+        '<path d="M-12 0 Q0 -4 12 0" fill="none" stroke="' + C.ink + '" stroke-opacity=".45"/>' +
+        '</g>';
+      inner += candle(190, 540, 70, a) + candle(710, 540, 70, a);
+    } else if (kind === 'door') {
+      inner += '<rect x="250" y="100" width="400" height="460" fill="' + C.night2 + '" stroke="' + a + '" stroke-opacity=".6"/>';
+      inner += '<rect x="286" y="136" width="328" height="424" fill="url(#light)" opacity=".5"/>';
+      inner += '<g fill="' + C.ink + '" stroke="' + a + '" stroke-opacity=".55">' +
+        '<path d="M250 560 V100 L286 136 V560Z"/>' +
+        '<path d="M650 560 V100 L614 136 V560Z"/>' +
+        '</g>';
+      inner += '<path d="M450 560 V300" stroke="' + C.ink + '" stroke-width="8" opacity=".7"/>';
+      inner += '<g transform="translate(450 400)" fill="' + C.ink + '">' +
+        '<circle cx="0" cy="-82" r="18"/><path d="M-30 200 Q-44 20 0 -54 Q44 20 30 200Z"/></g>';
+      inner += '<path d="M240 560 L660 560 L720 520 L180 520Z" fill="' + C.ink + '" opacity=".6"/>';
+      inner += '<g transform="translate(700 470) rotate(-8)">' +
+        '<rect x="-58" y="-34" width="116" height="68" fill="' + C.ivory + '" opacity=".13" stroke="' + a + '" stroke-opacity=".6"/>' +
+        '<text x="0" y="2" text-anchor="middle" fill="' + a + '" font-family="Georgia,serif" font-size="8" letter-spacing="2">À VOUS</text>' +
+        '</g>';
+    } else if (kind === 'chandelier') {
+      inner += '<g stroke="' + a + '" stroke-opacity=".20">' +
+        '<path d="M450 0 L180 560 M450 0 L720 560 M450 0 L0 420 M450 0 L900 420"/></g>';
+      inner += '<g transform="translate(450 70)" fill="none" stroke="' + a + '">' +
+        '<path d="M0 0 V42"/><path d="M-112 80 Q0 142 112 80" stroke-opacity=".55"/>' +
+        '<path d="M-76 72 Q0 116 76 72" stroke-opacity=".45"/>' +
+        '<ellipse cx="0" cy="86" rx="118" ry="22" stroke-opacity=".4"/>' +
+        '<path d="M-112 80 V116 M-56 98 V128 M0 104 V138 M56 98 V128 M112 80 V116" stroke-opacity=".7"/>';
+      inner += '</g>';
+      for (let i = -6; i <= 6; i++) {
+        inner += '<circle cx="' + (450 + i * 18) + '" cy="' + (156 + Math.abs(i) * 4) + '" r="2" fill="' + a + '"/>';
+      }
+      inner += '<g fill="' + C.ink + '" stroke="' + a + '" stroke-opacity=".28">' +
+        '<ellipse cx="170" cy="470" rx="120" ry="18"/><ellipse cx="730" cy="470" rx="120" ry="18"/></g>';
+      inner += '<g fill="' + C.ink + '">' +
+        '<circle cx="210" cy="390" r="12"/><path d="M196 404 L226 404 L236 470 L188 470Z"/>' +
+        '<circle cx="690" cy="390" r="12"/><path d="M676 404 L706 404 L716 470 L668 470Z"/>' +
+        '<circle cx="450" cy="420" r="11"/><path d="M436 434 L464 434 L476 500 L424 500Z"/>' +
+        '</g>';
+      inner += candle(330, 470, 40, a) + candle(570, 470, 40, a);
+    } else if (kind === 'dawn') {
+      inner += '<rect x="120" y="60" width="660" height="380" fill="#d8b06a" opacity=".10"/>';
+      inner += '<path d="M120 440 V100 Q450 26 780 100 V440Z" fill="none" stroke="' + a + '" stroke-opacity=".55"/>';
+      inner += '<g stroke="' + a + '" stroke-opacity=".3">' +
+        '<path d="M450 80 V440 M190 200 H710 M190 300 H710"/></g>';
+      inner += '<circle cx="450" cy="300" r="46" fill="' + a + '" opacity=".45"/>';
+      inner += '<path d="M120 440 H780 L900 560 H0Z" fill="' + C.night2 + '" opacity=".85"/>';
+      inner += '<g fill="' + C.ink + '">' +
+        '<circle cx="450" cy="420" r="14"/><path d="M428 438 L472 438 L492 540 L408 540Z"/>' +
+        '</g>';
+      inner += '<g fill="none" stroke="' + a + '" stroke-opacity=".4"><path d="M140 440 V520 M760 440 V520"/></g>';
+    } else if (kind === 'host') {
+      inner += '<path d="M0 560 H900 V430 H0Z" fill="' + C.night2 + '" stroke="' + a + '" stroke-opacity=".45"/>';
+      inner += '<g transform="translate(450 260)">' +
+        '<path d="M-90 280 Q-112 80 -38 22 L0 48 L38 22 Q112 80 90 280Z" fill="' + C.ink + '" stroke="' + a + '" stroke-opacity=".6"/>' +
+        '<path d="M-38 22 L0 88 L38 22" fill="none" stroke="' + a + '" stroke-opacity=".5"/>' +
+        '<path d="M-16 8 Q0 -18 16 8 Q10 34 0 36 Q-10 34 -16 8Z" fill="' + C.ivory + '" opacity=".92"/>' +
+        '<path d="M-10 2 Q0 -2 10 2" fill="none" stroke="' + C.ink + '" stroke-opacity=".4"/>' +
+        '<path d="M0 88 V250" stroke="' + C.ivory + '" stroke-opacity=".25"/>' +
+        '</g>';
+      inner += '<g fill="' + C.ink + '">' +
+        '<circle cx="190" cy="430" r="12"/><path d="M174 446 L206 446 L218 520 L162 520Z"/>' +
+        '<circle cx="710" cy="430" r="12"/><path d="M694 446 L726 446 L738 520 L682 520Z"/>' +
+        '</g>';
+      for (let i = 0; i < 5; i++) inner += candle(80 + i * 185, 520, 60, a);
+      inner += '<g stroke="' + a + '" stroke-opacity=".5"><path d="M0 400 H900"/></g>';
+    } else if (kind === 'mirror') {
+      inner += '<path d="M290 560 V170 Q450 40 610 170 V560Z" fill="' + C.silver + '" opacity=".06" stroke="' + a + '" stroke-opacity=".65"/>';
+      inner += '<path d="M320 560 V190 Q450 84 580 190 V560" fill="' + C.night2 + '" opacity=".7" stroke="' + a + '" stroke-opacity=".3"/>';
+      inner += '<g transform="translate(450 380)">' +
+        '<circle cx="0" cy="-80" r="22" fill="' + C.ink + '" stroke="' + a + '" stroke-opacity=".4"/>' +
+        '<path d="M-44 150 Q-58 20 -18 -54 L18 -54 Q58 20 44 150Z" fill="' + C.ink + '" stroke="' + a + '" stroke-opacity=".4"/>' +
+        '<path d="M-16 -54 Q0 -78 16 -54" fill="none" stroke="' + C.silver + '" stroke-opacity=".5"/>' +
+        '</g>';
+      inner += '<g stroke="' + a + '" stroke-opacity=".35"><path d="M180 560 Q450 470 720 560"/><path d="M210 120 L250 90 M690 120 L650 90"/></g>';
+      inner += '<g transform="translate(620 380)"><path d="M0 0 Q40 10 42 48 Q34 80 10 84" fill="none" stroke="' + C.ivory + '" stroke-opacity=".55"/><circle cx="10" cy="84" r="8" fill="' + C.ivory + '" opacity=".35"/></g>';
+    } else if (kind === 'fire') {
+      inner += '<rect width="900" height="560" fill="' + C.wine + '" opacity=".12"/>';
+      inner += '<g fill="' + C.wineHi + '" opacity=".55">' +
+        '<path d="M90 560 Q40 430 120 360 Q110 470 180 420 Q170 510 240 560Z"/>' +
+        '<path d="M760 560 Q820 420 730 340 Q740 460 670 400 Q690 510 620 560Z"/>' +
+        '</g>';
+      inner += '<g fill="' + a + '" opacity=".55">' +
+        '<path d="M180 560 Q150 470 210 420 Q200 500 260 480 Q250 530 300 560Z"/>' +
+        '<path d="M670 560 Q710 460 650 400 Q660 490 600 470 Q620 530 570 560Z"/>' +
+        '</g>';
+      inner += '<g stroke="' + C.ink + '" stroke-width="10" opacity=".8"><path d="M450 0 V120"/></g>';
+      inner += '<g transform="translate(450 170)" fill="none" stroke="' + C.ink + '" stroke-width="5" opacity=".7">' +
+        '<ellipse cx="0" cy="30" rx="120" ry="22"/><path d="M-120 30 L-160 120 M120 30 L160 120"/></g>';
+      inner += '<g fill="' + C.ink + '">' +
+        '<circle cx="300" cy="400" r="12"/><path d="M284 416 L316 416 L328 500 L272 500Z"/>' +
+        '<circle cx="610" cy="410" r="12"/><path d="M594 426 L626 426 L638 510 L582 510Z"/>' +
+        '</g>';
+      inner += candle(450, 500, 90, a);
+    } else if (kind === 'waltz') {
+      inner += '<g fill="none" stroke="' + a + '" stroke-opacity=".25">' +
+        '<path d="M0 560 L450 280 L900 560"/><ellipse cx="450" cy="330" rx="320" ry="80"/></g>';
+      inner += '<g transform="translate(420 350)">' +
+        '<circle cx="-56" cy="-120" r="18" fill="' + C.ink + '" stroke="' + a + '" stroke-opacity=".4"/>' +
+        '<path d="M-94 230 Q-120 0 -56 -100 L-20 -100 Q20 0 8 230Z" fill="' + C.ink + '" stroke="' + a + '" stroke-opacity=".45"/>' +
+        '<circle cx="38" cy="-138" r="16" fill="' + C.ivory + '" opacity=".85"/>' +
+        '<path d="M10 220 Q-6 -20 38 -120 L72 -110 Q96 20 82 220Z" fill="' + C.ivory + '" opacity=".2" stroke="' + a + '" stroke-opacity=".5"/>' +
+        '<path d="M-20 -100 Q-70 -70 -90 10" fill="none" stroke="' + C.ink + '" stroke-width="14"/>' +
+        '<path d="M38 -110 Q70 -60 80 20" fill="none" stroke="' + C.ivory + '" stroke-opacity=".55" stroke-width="10"/>' +
+        '<path d="M-8 220 Q40 250 92 220" fill="none" stroke="' + C.ink + '" stroke-width="14"/>' +
+        '</g>';
+      inner += '<g transform="translate(690 160)" fill="none" stroke="' + a + '" stroke-opacity=".5">' +
+        '<path d="M0 0 V40"/><path d="M-50 50 Q0 80 50 50"/><path d="M-30 68 V92 M30 68 V92"/></g>';
+      inner += '<g fill="' + a + '" opacity=".4"><circle cx="150" cy="480" r="2"/><circle cx="720" cy="500" r="2"/><circle cx="260" cy="180" r="1.5"/></g>';
+    } else if (kind === 'street') {
+      inner += '<rect width="900" height="560" fill="' + C.blue + '" opacity=".28"/>';
+      inner += '<rect x="120" y="170" width="420" height="300" fill="' + C.ink + '" stroke="' + a + '" stroke-opacity=".35"/>';
+      inner += '<g fill="' + a + '" opacity=".18">';
+      for (let i = 0; i < 4; i++) inner += '<rect x="' + (160 + i * 92) + '" y="220" width="40" height="60"/>';
+      inner += '</g>';
+      inner += '<text x="330" y="360" text-anchor="middle" fill="' + a + '" font-family="Georgia,serif" font-size="18" letter-spacing="5" opacity=".65">HÔTEL CENDRES</text>';
+      inner += '<g stroke="' + a + '" stroke-opacity=".55"><path d="M720 560 V210"/><path d="M690 210 H750"/><circle cx="720" cy="190" r="16" fill="' + a + '" opacity=".22"/></g>';
+      inner += rain(a, 42, 13);
+      inner += '<g transform="translate(520 400)" fill="' + C.ink + '">' +
+        '<circle cx="0" cy="-62" r="13"/><path d="M-22 220 Q-38 0 0 -52 Q38 0 22 220Z"/>' +
+        '</g>';
+      inner += '<g stroke="' + a + '" stroke-opacity=".25"><path d="M0 520 H900"/><path d="M0 540 H900"/></g>';
+    } else {
+      inner += '<rect x="120" y="120" width="660" height="320" fill="none" stroke="' + a + '" stroke-opacity=".3"/>';
+    }
+    return frame(a, inner);
+  }
+
+  function detail(kind, accent) {
+    const a = accent || C.gold;
+    const id = 'dt' + (++uid);
+    let inner = '<rect width="420" height="300" fill="#0b080d"/>';
+    inner += '<rect x="12" y="12" width="396" height="276" fill="none" stroke="' + a + '" stroke-opacity=".25"/>';
+    if (kind === 'invitation') {
+      inner += '<g transform="translate(210 150) rotate(-7)">' +
+        '<rect x="-92" y="-64" width="184" height="128" fill="' + C.ivory + '" opacity=".09" stroke="' + a + '"/>' +
+        '<text x="0" y="-22" text-anchor="middle" fill="' + a + '" font-family="Georgia,serif" font-size="9" letter-spacing="3">HÔTEL CENDRES</text>' +
+        '<text x="0" y="2" text-anchor="middle" fill="' + C.ivory + '" font-family="Georgia,serif" font-size="17" letter-spacing="5">À VOUS</text>' +
+        '<path d="M-38 26 H38" stroke="' + a + '" stroke-opacity=".5"/>' +
+        '<circle cx="0" cy="50" r="13" fill="' + C.wine + '" stroke="' + a + '" stroke-opacity=".6"/>' +
+        '<text x="0" y="54" text-anchor="middle" fill="' + a + '" font-size="8">C</text>' +
+        '</g>';
+    } else if (kind === 'ring') {
+      inner += '<ellipse cx="210" cy="190" rx="90" ry="30" fill="' + C.ivory + '" opacity=".06"/>';
+      inner += '<circle cx="210" cy="145" r="46" fill="none" stroke="' + a + '" stroke-width="7"/>';
+      inner += '<circle cx="210" cy="145" r="55" fill="none" stroke="' + a + '" stroke-opacity=".15"/>';
+      inner += '<path d="M190 185 L210 220 L230 185" fill="none" stroke="' + a + '" stroke-opacity=".35"/>';
+    } else if (kind === 'glass') {
+      inner += '<path d="M150 90 H270 L250 170 Q210 196 170 170Z" fill="' + C.wine + '" opacity=".35" stroke="' + a + '"/>';
+      inner += '<path d="M210 180 V250 M170 260 H250" stroke="' + a + '" stroke-opacity=".7"/>';
+      inner += '<ellipse cx="210" cy="100" rx="58" ry="8" fill="' + a + '" opacity=".25"/>';
+      inner += '<circle cx="260" cy="80" r="3" fill="' + a + '"/><circle cx="280" cy="120" r="2" fill="' + a + '"/>';
+    } else if (kind === 'clock') {
+      inner += '<circle cx="210" cy="150" r="88" fill="none" stroke="' + a + '" stroke-opacity=".75"/>';
+      inner += '<circle cx="210" cy="150" r="4" fill="' + a + '"/>';
+      inner += '<path d="M210 150 V90 M210 150 L238 166" stroke="' + a + '" stroke-width="3"/>';
+      inner += '<path d="M210 62 V74 M298 150 H286 M210 238 V226 M122 150 H134" stroke="' + a + '" stroke-opacity=".5"/>';
+    } else if (kind === 'cuff') {
+      inner += '<path d="M120 280 L150 80 L270 80 L300 280" fill="' + C.ink + '" stroke="' + a + '" stroke-opacity=".5"/>';
+      inner += '<path d="M160 120 H260" stroke="' + C.ivory + '" stroke-opacity=".4"/>';
+      inner += '<circle cx="240" cy="150" r="7" fill="' + a + '"/><path d="M240 150 V220" stroke="' + a + '" stroke-opacity=".3"/>';
+    } else if (kind === 'shard') {
+      inner += '<path d="M120 260 L160 50 L280 90 L300 230 L210 270Z" fill="' + C.silver + '" opacity=".12" stroke="' + a + '" stroke-opacity=".6"/>';
+      inner += '<path d="M170 210 Q210 140 260 180" fill="none" stroke="' + C.ivory + '" stroke-opacity=".4"/>';
+      inner += '<circle cx="220" cy="165" r="13" fill="' + C.ink + '" stroke="' + a + '"/><circle cx="220" cy="165" r="4" fill="' + a + '"/>';
+    } else if (kind === 'candle') {
+      for (let i = 0; i < 7; i++) inner += candle(80 + i * 44, 260, 70 + (i % 3) * 14, i === 6 ? a : C.ivory);
+      inner += '<path d="M70 268 H350" stroke="' + a + '" stroke-opacity=".4"/>';
+    } else if (kind === 'rooftop') {
+      inner += '<rect x="60" y="90" width="300" height="140" fill="' + a + '" opacity=".12"/>';
+      inner += '<circle cx="210" cy="170" r="38" fill="' + a + '" opacity=".4"/>';
+      inner += '<g stroke="' + a + '" stroke-opacity=".5"><path d="M50 240 H370"/><path d="M80 240 V200 M110 240 V200 M300 240 V200 M330 240 V200"/></g>';
+      inner += '<path d="M60 260 H360" stroke="' + a + '" stroke-opacity=".6"/>';
+    } else if (kind === 'mask') {
+      inner += '<path d="M120 100 Q210 50 300 100 Q310 200 210 250 Q110 200 120 100Z" fill="' + C.ivory + '" opacity=".82" stroke="' + a + '"/>';
+      inner += '<path d="M160 140 Q185 130 205 145 M215 145 Q240 130 262 140" fill="none" stroke="' + C.ink + '" stroke-opacity=".55"/>';
+      inner += '<path d="M210 145 L202 190" stroke="' + C.ink + '" stroke-opacity=".3"/>';
+      inner += '<path d="M250 70 L230 140 L280 170" fill="none" stroke="' + C.ink + '" stroke-opacity=".2"/>';
+    } else if (kind === 'door') {
+      inner += '<rect x="130" y="60" width="160" height="210" fill="' + C.ink + '" stroke="' + a + '" stroke-opacity=".5"/>';
+      inner += '<circle cx="260" cy="170" r="7" fill="' + a + '"/>';
+      inner += '<path d="M210 270 L210 300" stroke="' + a + '" stroke-opacity=".5"/>';
+      inner += '<rect x="145" y="75" width="130" height="180" fill="' + a + '" opacity=".05"/>';
+    } else if (kind === 'veil') {
+      inner += '<path d="M120 70 Q210 20 300 70 L340 270 Q210 310 80 270Z" fill="' + C.ivory + '" opacity=".08" stroke="' + a + '" stroke-opacity=".45"/>';
+      for (let i = 0; i < 7; i++) inner += '<path d="M' + (120 + i * 30) + ' 80 Q' + (130 + i * 30) + ' 170 ' + (110 + i * 30) + ' 270" fill="none" stroke="' + a + '" stroke-opacity=".15"/>';
+    } else if (kind === 'eyes') {
+      for (let i = 0; i < 9; i++) {
+        const x = 80 + (i % 3) * 120, y = 90 + Math.floor(i / 3) * 70;
+        inner += '<path d="M' + (x - 28) + ' ' + y + ' Q' + x + ' ' + (y - 18) + ' ' + (x + 28) + ' ' + y + ' Q' + x + ' ' + (y + 18) + ' ' + (x - 28) + ' ' + y + 'Z" fill="none" stroke="' + a + '" stroke-opacity=".45"/>';
+        inner += '<circle cx="' + x + '" cy="' + y + '" r="6" fill="' + a + '" opacity=".55"/>';
+      }
+    } else {
+      inner += '<circle cx="210" cy="150" r="60" fill="none" stroke="' + a + '" stroke-opacity=".4"/>';
+    }
+    return '<svg class="cine-svg" viewBox="0 0 420 300" preserveAspectRatio="xMidYMid slice" ' +
+      'xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+      '<defs><linearGradient id="' + id + 'bg" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop stop-color="#151017"/><stop offset="1" stop-color="#050407"/></linearGradient></defs>' +
+      '<rect width="420" height="300" fill="url(#' + id + 'bg)"/>' + inner + '</svg>';
+  }
+
+  const PROLOGUE = {
+    pages: [
+      {
+        scene: 'hotel', detail: 'invitation', kicker: 'PARIS · 1928',
+        caption: '那一年，塞纳河右岸开了一家不该开的酒店。',
+        note: 'Hôtel Cendres。招牌上的金漆还没有干，请柬已经送到了全巴黎。'
+      },
+      {
+        scene: 'wedding', detail: 'ring', kicker: 'THE WEDDING',
+        caption: '开业之夜，顶楼同时举行一场婚礼。',
+        note: '新娘等到午夜十二点。钟响了，新郎没有来。来的是一件空外套。'
+      },
+      {
+        scene: 'ballroom', detail: 'glass', kicker: 'TWELVE O’CLOCK',
+        caption: '十二点之后，酒店没有开门。客人也没有离开。',
+        note: '乐队继续演奏。没有人愿意做第一个承认宴会已经结束的人。'
+      },
+      {
+        scene: 'door', detail: 'mask', kicker: 'ONE HUNDRED YEARS LATER',
+        caption: '一百年后，请柬上重新浮出一个名字。',
+        note: '门为你开了。你不知道自己是被邀请，还是被认领。'
+      },
+      {
+        scene: 'chandelier', detail: 'candle', kicker: 'THE INVITATION', final: true,
+        title: '黑金挽歌', titleEn: 'GILDED REQUIEM',
+        caption: '请进。请坐。请不要让宴会散场。',
+        note: '一场永不散场的葬礼晚宴。'
+      }
+    ]
+  };
+
+  const ENDINGS = {
+    dawn: {
+      accent: '#e4c37c', scenes: ['dawn', 'street', 'dawn'], details: ['rooftop', 'glass', 'ring'],
+      kicker: 'ENDING I · THE FIRST LIGHT', note: '你走进晨光里。酒店在身后，像一场终于醒来的梦。'
+    },
+    host: {
+      accent: '#d6b06a', scenes: ['host', 'ballroom', 'coat'], details: ['cuff', 'glass', 'mask'],
+      kicker: 'ENDING II · THE NEW HOST', note: '你接过那件空外套。门童替你理了理衣领。'
+    },
+    mirror: {
+      accent: '#b9c4c2', scenes: ['mirror', 'mirror', 'door'], details: ['shard', 'eyes', 'mask'],
+      kicker: 'ENDING III · THE EMPTY SEAT', note: '镜子里多了一把椅子。椅子上坐着一个没有脸的人。'
+    },
+    seventh: {
+      accent: '#c96b75', scenes: ['fire', 'fire', 'chandelier'], details: ['candle', 'mask', 'shard'],
+      kicker: 'ENDING IV · THE SEVENTH CANDLE', note: '第七支蜡烛亮起时，整座酒店终于记起了火。'
+    },
+    bride: {
+      accent: '#e8ddc4', scenes: ['waltz', 'waltz', 'dawn'], details: ['veil', 'ring', 'rooftop'],
+      kicker: 'ENDING V · THE NAMELESS WEDDING', note: '你们跳完最后一支舞。这一次，没有人迟到。'
+    },
+    exit: {
+      accent: '#9fb3b0', scenes: ['street', 'street', 'hotel'], details: ['door', 'glass', 'invitation'],
+      kicker: 'ENDING VI · THE LAST EXIT', note: '你从侧门离开。身后的乐队没有停，但你已经听不见了。'
+    }
+  };
+
+  CEN.cinema = { PROLOGUE, ENDINGS, scene, detail };
+})(window);
+
+</script>
+<script>
+/* ============================================================
    GILDED REQUIEM — game
    A 1920s gothic-deco roguelite. Everything is hand-drawn.
    ============================================================ */
@@ -6415,7 +7025,19 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
     startBtn: $('start-btn'),
     guideStart: $('guide-start'),
     guideMoves: $('guide-moves'),
+    guideCinema: $('guide-cinema'),
     guideBack: $('guide-back'),
+    cinematic: $('cinematic'),
+    cinemaKicker: $('cinema-kicker'),
+    cinemaCount: $('cinema-count'),
+    cinemaStage: document.querySelector('.cinema-stage'),
+    cinemaArt: $('cinema-art'),
+    cinemaDetailArt: $('cinema-detail-art'),
+    cinemaCaption: $('cinema-caption'),
+    cinemaNote: $('cinema-note'),
+    cinemaDots: $('cinema-dots'),
+    cinemaSkip: $('cinema-skip'),
+    cinemaNext: $('cinema-next'),
     moveSheet: $('move-sheet'),
     movesClose: $('moves-close'),
     movesOk: $('moves-ok'),
@@ -6569,6 +7191,7 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
       wins: Math.max(0, m.wins || 0),
       muted: !!m.muted,
       seenMoves: !!m.seenMoves,
+      seenOpening: !!m.seenOpening,
       brightness: clamp(m.brightness || 1.12, 1, 1.5),
       bank: Math.max(0, Math.floor(m.bank || 0)),
       chars: chars,
@@ -6715,6 +7338,122 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
     S.last = performance.now();
     markMovesSeen();
     audio('click');
+  }
+
+  /* ---------------------------- cinematic comic ---------------------------- */
+  function markOpeningSeen() {
+    if (S.meta.seenOpening) return;
+    S.meta.seenOpening = true;
+    saveMeta();
+  }
+
+  function buildEndingPages(ending) {
+    const cfg = (CEN.cinema.ENDINGS && CEN.cinema.ENDINGS[ending.id]) || CEN.cinema.ENDINGS.exit;
+    const pages = (ending.text || []).map((text, i) => ({
+      scene: cfg.scenes[i % cfg.scenes.length],
+      detail: cfg.details[i % cfg.details.length],
+      kicker: i === 0 ? cfg.kicker : '',
+      caption: text,
+      note: i === 0 ? cfg.note : ''
+    }));
+    pages.push({
+      final: true,
+      scene: cfg.scenes[0],
+      detail: cfg.details[0],
+      kicker: cfg.kicker,
+      title: ending.name,
+      titleEn: 'ENDING ' + ending.numeral + ' · ' + ending.en,
+      caption: cfg.note
+    });
+    return pages;
+  }
+
+  function renderCinemaPage(index) {
+    const c = S.cinema;
+    if (!c) return;
+    const page = c.pages[index];
+    const accent = c.kind === 'ending' && c.ending
+      ? ((CEN.cinema.ENDINGS[c.ending.id] || {}).accent || '#c9a45c')
+      : '#c9a45c';
+    c.index = index;
+    dom.cinemaKicker.textContent = page.kicker || (c.kind === 'ending' ? 'THE LAST PAGE' : 'HÔTEL CENDRES · PARIS');
+    dom.cinemaCount.textContent = (index + 1) + ' / ' + c.pages.length;
+    dom.cinemaArt.innerHTML = CEN.cinema.scene(page.scene, accent);
+    dom.cinemaDetailArt.innerHTML = CEN.cinema.detail(page.detail, accent);
+    dom.cinemaStage.classList.toggle('final', !!page.final);
+    dom.cinemaArt.parentNode.classList.toggle('final', !!page.final);
+    dom.cinemaNote.textContent = page.note || '';
+    if (page.final) {
+      dom.cinemaCaption.innerHTML = '<span class="cine-final-title">' + page.title + '</span>' +
+        '<span class="cine-final-en">' + page.titleEn + '</span>' +
+        '<span class="cine-final-line">' + (page.caption || '') + '</span>';
+    } else {
+      dom.cinemaCaption.textContent = page.caption || '';
+    }
+    dom.cinemaDots.innerHTML = c.pages.map((p, i) =>
+      '<i class="cinema-dot' + (i === index ? ' on' : '') + '"></i>'
+    ).join('');
+    const last = index === c.pages.length - 1;
+    dom.cinemaNext.innerHTML = last
+      ? (c.kind === 'ending' ? '谢幕 <span class="en">CURTAIN CALL</span>' : '进入晚宴 <span class="en">ENTER THE WAKE</span>')
+      : '继续 <span class="en">NEXT</span>';
+    // restart the slow pan / caption reveal on every page
+    const svg = dom.cinemaArt.querySelector('svg');
+    if (svg) { svg.style.animation = 'none'; void svg.getBoundingClientRect(); svg.style.animation = ''; }
+  }
+
+  function openCinematic(kind, ending) {
+    if (S.cinema || !CEN.cinema) return;
+    const pages = kind === 'ending' ? buildEndingPages(ending) : CEN.cinema.PROLOGUE.pages.slice();
+    if (!pages.length) return;
+    S.cinema = { kind: kind, ending: ending || null, pages: pages, index: 0, prevMode: S.mode };
+    S.mode = kind === 'ending' ? 'ending' : 'cinematic';
+    S.keys = {};
+    S.mouse.left = false;
+    S.mouse.right = false;
+    endBlock();
+    hideScreens();
+    document.body.classList.remove('in-game');
+    document.body.classList.add('cinematic-mode');
+    dom.hud.classList.add('hidden');
+    dom.cinematic.classList.add('on');
+    dom.cinematic.setAttribute('aria-hidden', 'false');
+    if (kind === 'ending') {
+      try { CEN.Audio.stopMusic(); } catch (e) { /* ignore */ }
+    }
+    renderCinemaPage(0);
+    audio('click');
+  }
+
+  function advanceCinematic() {
+    const c = S.cinema;
+    if (!c) return;
+    if (c.index < c.pages.length - 1) {
+      renderCinemaPage(c.index + 1);
+      audio('click');
+    } else {
+      finishCinematic();
+    }
+  }
+
+  function finishCinematic() {
+    const c = S.cinema;
+    if (!c) return;
+    dom.cinematic.classList.remove('on');
+    dom.cinematic.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('cinematic-mode');
+    S.cinema = null;
+    S.last = performance.now();
+    if (c.kind === 'ending') {
+      try { CEN.Audio.playFinale(); } catch (e) { /* ignore */ }
+      showVictory(c.ending);
+      return;
+    }
+    markOpeningSeen();
+    S.mode = 'guide';
+    showOnly('guide');
+    audio('click');
+    if (!S.meta.seenMoves) setTimeout(() => openMoveSheet(), 260);
   }
 
   /* ---------------------------- roster / story ---------------------------- */
@@ -7321,9 +8060,8 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
   }
 
   function win() {
-    if (S.mode === 'victory') return;
+    if (S.mode === 'victory' || S.mode === 'ending' || S.cinema) return;
     forceCollectPickups();
-    S.mode = 'victory';
     S.banked = bankRunPearls();
     const ending = X.endingFor(S.storyChoices, S.storyIndex, S.bossVariant);
     S.ending = ending;
@@ -7332,19 +8070,23 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
     if (S.meta.endings.indexOf(ending.id) === -1) S.meta.endings.push(ending.id);
     saveMeta();
     renderTitleMeta();
-    try {
-      CEN.Audio.stopMusic();
-      CEN.Audio.playFinale();
-    } catch (e) { /* ignore */ }
+    S.mode = 'ending';
+    openCinematic('ending', ending);
+  }
+
+  function showVictory(ending) {
+    const e = ending || S.ending;
+    if (!e) return;
+    S.mode = 'victory';
     showOnly('victory');
     dom.hud.classList.add('hidden');
     dom.victoryText.classList.add('hidden');
     dom.victoryEndingEn.classList.add('hidden');
     dom.victoryStats.innerHTML = statsHTML() +
       '<div class="stat bank"><span>珍珠</span><b>◈ ' + S.banked + ' 存入衣帽间</b></div>';
-    dom.victoryEnding.innerHTML = '<p class="ending-name">' + ending.name + '</p>' +
-      '<p class="ending-tag">ENDING ' + ending.numeral + ' · ' + ending.en + '</p>' +
-      ending.text.map((p) => '<p>' + p + '</p>').join('');
+    dom.victoryEnding.innerHTML = '<p class="ending-name">' + e.name + '</p>' +
+      '<p class="ending-tag">ENDING ' + e.numeral + ' · ' + e.en + '</p>' +
+      e.text.map((p) => '<p>' + p + '</p>').join('');
     dom.bossWrap.classList.add('hidden');
     addBurst(S.player.x, S.player.y, P.goldHi, 40);
   }
@@ -9218,6 +9960,16 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
       if (k === ' ' || k === 'arrowup' || k === 'arrowdown' || k === 'arrowleft' || k === 'arrowright') {
         e.preventDefault();
       }
+      if (S.cinema) {
+        if (k === 'escape') {
+          e.preventDefault();
+          finishCinematic();
+        } else if (!e.repeat && (k === ' ' || k === 'enter' || k === 'arrowright')) {
+          e.preventDefault();
+          advanceCinematic();
+        }
+        return;
+      }
       if (S.moveSheetOpen) {
         if (k === 'escape' || k === 'h') {
           e.preventDefault();
@@ -9316,7 +10068,17 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
       S.mode = 'guide';
       showOnly('guide');
       audio('click');
-      if (!S.meta.seenMoves) openMoveSheet();
+      if (!S.meta.seenOpening) {
+        openCinematic('prologue');
+      } else if (!S.meta.seenMoves) {
+        openMoveSheet();
+      }
+    });
+
+    dom.guideCinema.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openCinematic('prologue');
     });
 
     dom.guideMoves.addEventListener('click', (e) => {
@@ -9345,6 +10107,21 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
 
     dom.moveSheet.addEventListener('click', (e) => {
       if (e.target === dom.moveSheet) closeMoveSheet();
+    });
+
+    dom.cinemaNext.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      advanceCinematic();
+    });
+    dom.cinemaSkip.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      finishCinematic();
+    });
+    dom.cinematic.addEventListener('click', (e) => {
+      if (e.target.closest('button')) return;
+      advanceCinematic();
     });
 
     dom.guideStart.addEventListener('click', (e) => {
@@ -9518,6 +10295,9 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
   /* ---------------------------- init ---------------------------- */
   function init() {
     S.meta = loadMeta();
+    // full-screen overlays must not inherit the scaled #ui transform
+    if (dom.cinematic && dom.stage && dom.cinematic.parentNode !== dom.stage) dom.stage.appendChild(dom.cinematic);
+    if (dom.moveSheet && dom.stage && dom.moveSheet.parentNode !== dom.stage) dom.stage.appendChild(dom.moveSheet);
     cat: {
       // eslint-disable-next-line no-labels
       break cat;
