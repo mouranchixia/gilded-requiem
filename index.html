@@ -2361,7 +2361,7 @@ button {
             <article class="guide-card">
               <span class="guide-index en">III</span>
               <h3>战斗</h3>
-              <p><b>WASD</b> 移动，鼠标瞄准；左键帽针三连，右键掷出帽针（可穿透）。<b>Q</b> 在命中瞬间弹反，<b>SHIFT</b> 按住格挡，<b>SPACE</b> 在攻击触身瞬间闪避可触发完美闪避。三种守势都会积攒「断罪」，下一击更痛。</p>
+              <p><b>WASD</b> 移动，鼠标瞄准；左键帽针三连，右键掷出帽针（可穿透）。<b>Q</b> 在命中瞬间弹反，<b>SHIFT</b> 按住格挡（松开后 0.1 秒内仍判定），<b>SPACE</b> 在攻击触身瞬间闪避可触发完美闪避。三种守势都会积攒「断罪」，下一击更痛。</p>
             </article>
             <article class="guide-card">
               <span class="guide-index en">IV</span>
@@ -2507,8 +2507,8 @@ button {
 
           <div class="move-col">
             <h3><span class="en">II</span> 守势</h3>
-            <div class="move-row"><kbd>Q</kbd><div><b>弹反</b><small>触身前 0.22 秒按下；反伤 34、硬直 1.3 秒，可反射弹幕。</small></div></div>
-            <div class="move-row"><kbd>SHIFT</kbd><div><b>格挡</b><small>按住减伤，消耗守势；守势归零会破防。</small></div></div>
+            <div class="move-row"><kbd>Q</kbd><div><b>弹反</b><small>触身前 0.42 秒内按下；反伤 34、硬直 1.3 秒，可反射弹幕。</small></div></div>
+            <div class="move-row"><kbd>SHIFT</kbd><div><b>格挡</b><small>按住减伤，消耗守势；松开后 0.1 秒内判定仍保留，守势归零会破防。</small></div></div>
             <div class="move-row"><kbd>R</kbd><div><b>谢幕</b><small>喝彩满 100 后释放：敌人减速、你伤害提高。</small></div></div>
             <div class="move-row"><kbd>1 / 2 / 3</kbd><div><b>衣帽间</b><small>三选一遗物；3 珍珠重掷，5 珍珠喝香槟。</small></div></div>
           </div>
@@ -6297,7 +6297,7 @@ button {
       hurtFlash: 0, killStacks: 0, floorSlowUsed: false, alive: true,
       walkT: 0, dead: false,
       guard: 100, guardMax: 100, guardRegen: 0, guardBroken: 0,
-      blocking: false, blockT: 0, blockHeld: false, blockFlash: 0,
+      blocking: false, blockT: 0, blockHeld: false, blockRelease: 0, blockFlash: 0,
       parryT: 0, parryCd: 0, parryFlash: 0, parryReadyFlash: 0,
       dodgeWindow: 0, perfectT: 0, afterimageT: 0,
       counterT: 0, counterKind: '', defenseGlow: 0
@@ -6828,7 +6828,7 @@ button {
     const info = {
       parry:   { label: '弹反 · PARRY',   color: '#e6d6ff', appl: 16, shake: 10, guard: 22 },
       perfect: { label: '完美闪避 · PERFECT', color: '#f6e7b2', appl: 11, shake: 6, guard: 16 },
-      block:   { label: '格挡 · BLOCK',   color: '#9fdcff', appl: 6,  shake: 4,  guard: 0 },
+      block:   { label: '格挡 · BLOCK',   color: '#9fdcff', appl: 6,  shake: 12, guard: 0 },
       counter: { label: '断罪 · CONDEMN', color: '#ff6b81', appl: 8,  shake: 7,  guard: 8 }
     }[kind];
     if (!info) return;
@@ -6855,7 +6855,7 @@ button {
       return;
     }
     p.guard -= 8;
-    p.parryT = 0.22;
+    p.parryT = 0.42;
     p.parryCd = 0.55;
     p.blocking = false;
     p.attackAnim = 0.35;
@@ -6873,15 +6873,16 @@ button {
     if (!p || S.mode !== 'playing' || p.guard <= 0 || p.guardBroken > 0) return;
     p.blockHeld = true;
     p.blocking = true;
+    p.blockRelease = 0;
     p.parryT = 0;
-    p.blockT = 0.2;
+    p.blockT = 0.3;
   }
 
   function endBlock() {
     const p = S.player;
     if (!p) return;
+    if (p.blockHeld || p.blocking) p.blockRelease = Math.max(p.blockRelease || 0, 0.1);
     p.blockHeld = false;
-    p.blocking = false;
   }
 
   function breakGuard() {
@@ -6924,6 +6925,7 @@ button {
     p.parryReadyFlash = Math.max(0, p.parryReadyFlash - dt);
     p.blockFlash = Math.max(0, p.blockFlash - dt);
     p.blockT = Math.max(0, p.blockT - dt);
+    p.blockRelease = Math.max(0, (p.blockRelease || 0) - dt);
     p.dodgeWindow = Math.max(0, p.dodgeWindow - dt);
     p.perfectT = Math.max(0, p.perfectT - dt);
     p.afterimageT = Math.max(0, p.afterimageT - dt);
@@ -6933,7 +6935,7 @@ button {
     p.staggerT = Math.max(0, (p.staggerT || 0) - dt);
 
     const wasBlocking = p.blocking;
-    p.blocking = !!p.blockHeld && p.guard > 0 && p.guardBroken <= 0;
+    p.blocking = (!!p.blockHeld || (p.blockRelease || 0) > 0) && p.guard > 0 && p.guardBroken <= 0;
     if (p.blocking) {
       p.guard = Math.max(0, p.guard - 10 * dt);
       p.guardRegen = 0;
@@ -7003,14 +7005,14 @@ button {
       const drain = Math.max(8, dmg * 1.6);
       p.guard -= drain;
       p.guardRegen = 0.6;
-      p.blockFlash = 0.3;
-      p.blockT = 0.18;
+      p.blockFlash = 0.4;
+      p.blockT = 0.28;
       const chip = Math.max(1, dmg * 0.18);
       p.hp -= chip;
       S.damageTaken += chip;
       p.hurtFlash = 0.18;
       p.invuln = Math.max(p.invuln, 0.16);
-      S.shake = Math.max(S.shake, 4);
+      S.shake = Math.max(S.shake, 12);
       awardDefense('block', p.x, p.y);
       addText(p.x, p.y - 46, '-' + Math.round(chip) + ' 格挡', '#9fdcff', 12);
       if (p.guard <= 0) breakGuard();
@@ -7176,7 +7178,7 @@ button {
     p.dashLeft -= 1;
     p.dashActive = 0.17;
     p.dashDir = a;
-    p.dodgeWindow = 0.12;
+    p.dodgeWindow = 0.17;
     p.invuln = Math.max(p.invuln, 0.28);
     p.dashTimer = p.dashCd;
     p.afterDash = 0.5;
