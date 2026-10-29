@@ -2034,6 +2034,430 @@ button {
 }
 .guide-actions .move-btn { min-width: 190px; }
 
+/* ============================================================
+   MOBILE / TOUCH LAYER
+   The game stays a 16:9 canvas; menus become real-viewport
+   panels, and the HUD becomes a fixed touch HUD.
+   ============================================================ */
+#rotate-hint, #mobile-ui { display: none; }
+
+body.mobile {
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+}
+body.mobile #stage {
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  transform: none;
+  box-shadow: none;
+}
+body.mobile #game {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+body.mobile #ui { width: 100%; height: 100%; }
+body.mobile #hud { display: none; }
+
+/* ---- in-game mobile HUD ---- */
+body.mobile.in-game #mobile-ui { display: block; }
+#mobile-ui {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+  font-family: var(--serif-cn);
+  color: var(--bone);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+}
+#m-hud {
+  position: absolute;
+  top: calc(8px + env(safe-area-inset-top));
+  left: calc(10px + env(safe-area-inset-left));
+  right: calc(10px + env(safe-area-inset-right));
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.m-floor {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 150px;
+  padding: 3px 7px;
+  background: linear-gradient(90deg, rgba(6, 5, 8, 0.82), rgba(6, 5, 8, 0));
+}
+#m-floor-numeral {
+  font-family: var(--serif-en);
+  font-size: 18px;
+  color: var(--gold-hi);
+  letter-spacing: 0.08em;
+}
+#m-floor-name { font-size: 14px; letter-spacing: 0.12em; color: var(--ivory); }
+#m-timer { font-size: 9px; letter-spacing: 0.12em; color: rgba(232, 221, 196, 0.55); }
+
+.m-stats {
+  position: absolute;
+  top: 28px;
+  left: 10px;
+  width: min(38vw, 260px);
+}
+.m-stat {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 3px;
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  color: rgba(232, 221, 196, 0.72);
+}
+.m-stat > span { flex: 0 0 24px; }
+.m-stat > b { flex: 0 0 26px; text-align: right; font-size: 9px; font-weight: 400; color: var(--ivory); }
+.m-track {
+  flex: 1;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(201, 164, 92, 0.16);
+  overflow: hidden;
+}
+.m-track i { display: block; height: 100%; width: 100%; transform-origin: left center; transition: width 0.15s linear; }
+.m-hp { background: linear-gradient(90deg, #7e2733, #e0a7a3); box-shadow: 0 0 8px rgba(224, 167, 163, 0.3); }
+.m-guard { background: linear-gradient(90deg, #376f92, #bfeaff); box-shadow: 0 0 8px rgba(159, 220, 255, 0.3); }
+.m-applause { background: linear-gradient(90deg, #8c6a2e, #f0dca8); box-shadow: 0 0 8px rgba(240, 220, 168, 0.25); }
+
+.m-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  pointer-events: auto;
+}
+#m-pearls { font-size: 10px; color: var(--gold-hi); white-space: nowrap; }
+.m-icon {
+  min-width: 40px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid rgba(201, 164, 92, 0.35);
+  background: rgba(8, 6, 10, 0.72);
+  color: var(--gold-hi);
+  font-family: var(--serif-cn);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  border-radius: 2px;
+  touch-action: manipulation;
+}
+
+.m-boss {
+  position: absolute;
+  top: calc(8px + env(safe-area-inset-top));
+  left: 50%;
+  width: min(52vw, 560px);
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background: rgba(6, 5, 8, 0.75);
+  border-top: 1px solid rgba(201, 164, 92, 0.22);
+}
+.m-boss.hidden { display: none; }
+.m-boss-top { display: flex; justify-content: center; gap: 8px; font-size: 8px; letter-spacing: 0.16em; color: var(--gold-hi); margin-bottom: 3px; }
+.m-boss-top b { font-weight: 400; color: var(--ivory); }
+.m-boss .m-track { height: 3px; }
+
+/* ---- touch controls ---- */
+#m-joystick {
+  position: fixed;
+  left: calc(18px + env(safe-area-inset-left));
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  width: 124px;
+  height: 124px;
+  border-radius: 50%;
+  pointer-events: auto;
+  touch-action: none;
+  color: rgba(232, 221, 196, 0.28);
+}
+.m-joy-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(201, 164, 92, 0.25);
+  background: radial-gradient(circle, rgba(201, 164, 92, 0.07), rgba(0, 0, 0, 0.25) 70%);
+  box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.55);
+}
+.m-joy-ring::before, .m-joy-ring::after {
+  content: "";
+  position: absolute;
+  left: 50%; top: 50%;
+  background: rgba(201, 164, 92, 0.12);
+  transform: translate(-50%, -50%);
+}
+.m-joy-ring::before { width: 1px; height: 70%; }
+.m-joy-ring::after { width: 70%; height: 1px; }
+.m-joy-knob {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 48px; height: 48px;
+  margin: -24px 0 0 -24px;
+  border-radius: 50%;
+  border: 1px solid rgba(242, 223, 174, 0.5);
+  background: radial-gradient(circle at 38% 32%, rgba(242, 223, 174, 0.24), rgba(40, 26, 30, 0.8));
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5), 0 0 18px rgba(201, 164, 92, 0.13);
+  pointer-events: none;
+}
+
+#m-buttons {
+  position: fixed;
+  right: calc(16px + env(safe-area-inset-right));
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: repeat(3, 56px);
+  grid-auto-rows: 56px;
+  gap: 8px;
+  justify-items: end;
+  align-items: end;
+  pointer-events: none;
+}
+.m-btn {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1px solid rgba(201, 164, 92, 0.42);
+  background: radial-gradient(circle at 40% 30%, rgba(201, 164, 92, 0.18), rgba(10, 7, 11, 0.82));
+  color: var(--ivory);
+  font-family: var(--serif-cn);
+  font-size: 20px;
+  line-height: 1;
+  pointer-events: auto;
+  touch-action: manipulation;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), inset 0 0 14px rgba(201, 164, 92, 0.06);
+  transition: transform 0.08s ease, border-color 0.12s ease;
+}
+.m-btn small {
+  display: block;
+  margin-top: 2px;
+  font-size: 6.5px;
+  letter-spacing: 0.08em;
+  color: rgba(232, 221, 196, 0.55);
+}
+.m-btn:active, .m-btn.down { transform: scale(0.9); border-color: var(--gold-hi); }
+.m-btn.m-attack {
+  grid-column: 3;
+  grid-row: 2;
+  width: 72px;
+  height: 72px;
+  font-size: 28px;
+  border-color: rgba(242, 223, 174, 0.65);
+  background: radial-gradient(circle at 38% 30%, rgba(201, 164, 92, 0.35), rgba(40, 20, 26, 0.9));
+}
+.m-btn.m-parry { border-color: rgba(230, 214, 255, 0.5); color: #f0e7ff; }
+.m-btn.m-block { border-color: rgba(159, 220, 255, 0.45); color: #dff4ff; }
+.m-btn.m-dash { border-color: rgba(240, 220, 168, 0.5); }
+.m-btn.m-ult { border-color: rgba(224, 167, 163, 0.55); color: #ffd8d2; }
+.m-btn.m-minor { font-size: 17px; }
+.m-btn.empty { opacity: 0.35; filter: saturate(0.35); }
+.m-btn.ready {
+  border-color: var(--gold-hi);
+  box-shadow: 0 0 24px rgba(240, 220, 168, 0.45), inset 0 0 18px rgba(240, 220, 168, 0.12);
+}
+body.mobile #stage { height: 100vh; height: 100dvh; }
+body.mobile .hint { display: none; }
+#m-tip {
+  position: fixed;
+  left: 50%;
+  bottom: calc(10px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  font-size: 7.5px;
+  letter-spacing: 0.08em;
+  color: rgba(232, 221, 196, 0.35);
+  white-space: nowrap;
+  opacity: 1;
+  animation: mTipOut 1s ease 9s forwards;
+  pointer-events: none;
+}
+@keyframes mTipOut { to { opacity: 0; } }
+
+/* ---- rotate hint ---- */
+body.mobile.portrait #rotate-hint { display: flex; }
+#rotate-hint {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(126, 39, 51, 0.28), transparent 60%),
+    #060508;
+  text-align: center;
+  color: var(--ivory);
+}
+.rotate-frame { padding: 26px 30px; border: 1px solid rgba(201, 164, 92, 0.3); }
+.rotate-mark { font-size: 34px; color: var(--gold); margin-bottom: 10px; }
+.rotate-frame h2 { margin: 0 0 8px; font-family: var(--serif-cn); font-weight: 400; font-size: 24px; letter-spacing: 0.2em; }
+.rotate-frame p { margin: 0 0 10px; font-family: var(--serif-en); font-size: 10px; letter-spacing: 0.34em; color: var(--gold); }
+.rotate-frame small { font-size: 10px; color: rgba(232, 221, 196, 0.5); }
+
+/* ---- mobile menus: real viewport, not the 1280x720 transform ---- */
+body.mobile .screen { padding: 10px; }
+body.mobile .screen::before { inset: 7px; }
+body.mobile .title-cinema {
+  position: relative;
+  display: block;
+  height: 100%;
+  padding: 0;
+}
+body.mobile .title-art {
+  position: absolute;
+  inset: 0;
+  opacity: 0.38;
+  pointer-events: none;
+}
+body.mobile .title-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(6, 5, 8, 0.45), rgba(6, 5, 8, 0.9));
+}
+body.mobile .title-copy {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 16px 22px;
+  text-align: center;
+}
+body.mobile .cn-title { font-size: clamp(52px, 15vw, 118px); letter-spacing: 0.08em; line-height: 0.95; }
+body.mobile .en-title { font-size: clamp(13px, 3vw, 24px); letter-spacing: 0.36em; }
+body.mobile .title-kicker { font-size: 8px; letter-spacing: 0.26em; }
+body.mobile .title-genre { font-size: 8px; }
+body.mobile .title-lore { margin: 12px 0 14px; font-size: 13px; line-height: 1.7; }
+body.mobile .title-rule { margin: 8px 0; }
+body.mobile .controls { display: none; }
+body.mobile .title-meta { font-size: 9px; margin-top: 8px; }
+body.mobile .start-btn { width: min(74vw, 420px); min-height: 50px; margin-top: 12px; }
+body.mobile .footnote { margin-top: 8px; font-size: 8px; }
+body.mobile .title-foot, body.mobile .title-corner { display: none; }
+
+body.mobile .guide-panel {
+  width: 94vw;
+  max-height: 94vh;
+  overflow-y: auto;
+  padding: 14px 16px 12px;
+}
+body.mobile .guide-head { margin-bottom: 9px; }
+body.mobile .guide-head h2 { font-size: 26px; letter-spacing: 0.16em; }
+body.mobile .guide-head p { font-size: 10px; }
+body.mobile .guide-grid { grid-template-columns: 1fr; gap: 7px; }
+body.mobile .guide-card { min-height: 0; padding: 9px 11px; }
+body.mobile .guide-card h3 { font-size: 15px; margin-bottom: 3px; }
+body.mobile .guide-card p { font-size: 10px; line-height: 1.55; }
+body.mobile .guide-choice-note { padding: 7px 10px; font-size: 9px; }
+body.mobile .guide-actions { flex-wrap: wrap; gap: 7px; margin-top: 9px; }
+body.mobile .guide-actions .deco-btn { min-width: 0; flex: 1 1 30%; padding: 10px 8px; font-size: 11px; }
+body.mobile .guide-actions .move-btn { min-width: 0; }
+body.mobile .guide-foot { font-size: 7.5px; }
+
+body.mobile .roster-panel {
+  width: 96vw;
+  max-height: 95vh;
+  overflow-y: auto;
+  padding: 12px 14px 10px;
+}
+body.mobile .roster-head { margin-bottom: 7px; }
+body.mobile .roster-head h2 { font-size: 24px; }
+body.mobile .roster-head p { font-size: 9px; }
+body.mobile .roster-bank { font-size: 9px; }
+body.mobile .roster-grid { grid-template-columns: repeat(2, 1fr); gap: 7px; margin-top: 7px; }
+body.mobile .roster-card { min-height: 0; padding: 7px; }
+body.mobile .roster-portrait { flex: 0 0 58px; height: 82px; }
+body.mobile .roster-info { padding-left: 7px; }
+body.mobile .roster-info h3 { font-size: 13px; }
+body.mobile .roster-en { font-size: 5.5px; }
+body.mobile .roster-role { margin: 4px 0; font-size: 6.5px; }
+body.mobile .roster-line { font-size: 7.5px; line-height: 1.45; }
+body.mobile .roster-price { font-size: 7.5px; }
+body.mobile .roster-lock { display: none; }
+body.mobile .roster-actions { position: sticky; bottom: 0; z-index: 3; padding: 6px 0 2px; background: rgba(8, 6, 10, 0.94); gap: 7px; }
+body.mobile .roster-actions .deco-btn { min-width: 0; flex: 1; padding: 10px 8px; font-size: 11px; }
+body.mobile .roster-panel .hint { font-size: 7.5px; }
+
+body.mobile .story-panel {
+  width: 96vw;
+  max-height: 95vh;
+  overflow-y: auto;
+  padding: 14px 16px 10px;
+}
+body.mobile .story-head h2 { font-size: 28px; }
+body.mobile .story-quote { font-size: 11px; line-height: 1.7; margin-top: 8px; }
+body.mobile .story-route { gap: 10px; font-size: 7.5px; }
+body.mobile .story-choices { grid-template-columns: 1fr; gap: 7px; margin-top: 9px; }
+body.mobile .story-choice { min-height: 0; padding: 9px 11px; }
+body.mobile .story-choice h3 { font-size: 14px; margin: 3px 0; }
+body.mobile .story-choice p { font-size: 9px; line-height: 1.5; }
+body.mobile .story-foot { font-size: 7px; }
+
+body.mobile .move-panel {
+  width: 96vw;
+  max-height: 95vh;
+  overflow-y: auto;
+  padding: 16px 16px 12px;
+}
+body.mobile .move-panel h2 { font-size: 30px; }
+body.mobile .move-cols { grid-template-columns: 1fr; gap: 10px; }
+body.mobile .move-row { padding: 6px 0; }
+body.mobile .move-row small { font-size: 9px; }
+body.mobile .move-note { font-size: 8px; }
+body.mobile .move-panel .deco-btn { width: 100%; padding: 11px; }
+
+body.mobile .intro-inner { width: 92vw; max-height: 92vh; overflow-y: auto; }
+body.mobile .intro-numeral { font-size: 46px; }
+body.mobile .intro-name { font-size: 30px; }
+body.mobile .intro-quote { font-size: 12px; }
+body.mobile .intro-rule { font-size: 10px; }
+
+body.mobile .reward-inner {
+  width: 96vw;
+  max-height: 95vh;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+body.mobile .reward-inner h2 { font-size: 26px; }
+body.mobile .reward-cards {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 7px;
+  min-height: 0;
+  max-height: 54vh;
+  overflow-y: auto;
+  padding: 2px;
+}
+body.mobile .relic-card {
+  width: 100%;
+  min-height: 0;
+  padding: 9px 11px;
+}
+body.mobile .relic-card .card-icon { font-size: 24px; height: 30px; line-height: 30px; }
+body.mobile .relic-card .card-name { font-size: 16px; }
+body.mobile .relic-card .card-en { font-size: 6px; min-height: 8px; }
+body.mobile .relic-card .card-role { font-size: 6.5px; }
+body.mobile .relic-card .card-effect { font-size: 10px; }
+body.mobile .relic-card .card-tip { font-size: 8px; }
+body.mobile .relic-card .card-flavor { font-size: 7px; }
+body.mobile .reward-actions { flex-wrap: wrap; gap: 6px; }
+body.mobile .reward-actions .deco-btn { flex: 1; min-width: 0; padding: 9px 8px; font-size: 10px; }
+body.mobile .modal { width: 94vw; max-height: 94vh; overflow-y: auto; padding: 18px 18px 14px; }
+body.mobile .modal h2 { font-size: 30px; }
+body.mobile .modal-actions { flex-wrap: wrap; gap: 8px; }
+body.mobile .modal-actions .deco-btn { flex: 1; min-width: 0; padding: 10px 8px; font-size: 11px; }
+body.mobile .stats { grid-template-columns: repeat(3, 1fr); }
+body.mobile .victory-ending { font-size: 10px; }
+body.mobile .victory-ending .ending-name { font-size: 18px; }
+
+
 </style>
 </head>
 <body class="title-mode">
@@ -2522,6 +2946,67 @@ button {
     <div id="toast" class="toast"></div>
     <div id="error" class="error-box hidden"></div>
   </div>
+</div>
+
+<!-- ================= MOBILE / TOUCH LAYER ================= -->
+<div id="rotate-hint" aria-hidden="true">
+  <div class="rotate-frame">
+    <div class="rotate-mark">❖</div>
+    <h2>请横屏进入晚宴</h2>
+    <p class="en">ROTATE YOUR DEVICE</p>
+    <small>横屏后自动适配 · 手机端使用触控操作</small>
+  </div>
+</div>
+
+<div id="mobile-ui" aria-hidden="true">
+  <div id="m-hud">
+    <div class="m-floor">
+      <span id="m-floor-numeral" class="en">I</span>
+      <span id="m-floor-name">金厅</span>
+      <span id="m-timer">00:00</span>
+    </div>
+    <div id="m-boss" class="m-boss hidden">
+      <div class="m-boss-top"><span id="m-boss-name">THE HOST</span><b id="m-boss-cn">空外套之主</b></div>
+      <div class="m-track"><i id="m-boss-fill"></i></div>
+    </div>
+    <div class="m-stats">
+      <div class="m-stat">
+        <span>仪态</span>
+        <div class="m-track"><i id="m-hp-fill" class="m-hp"></i></div>
+        <b id="m-hp-num">100</b>
+      </div>
+      <div class="m-stat">
+        <span>守势</span>
+        <div class="m-track"><i id="m-guard-fill" class="m-guard"></i></div>
+        <b id="m-guard-num">100</b>
+      </div>
+      <div class="m-stat">
+        <span>喝彩</span>
+        <div class="m-track"><i id="m-applause-fill" class="m-applause"></i></div>
+        <b id="m-applause-num">0</b>
+      </div>
+    </div>
+    <div class="m-right">
+      <span id="m-pearls">◈ 0</span>
+      <button type="button" id="m-moves" class="m-icon" aria-label="招式速览">招式</button>
+      <button type="button" id="m-pause" class="m-icon" aria-label="暂停">Ⅱ</button>
+    </div>
+  </div>
+
+  <div id="m-joystick" aria-label="移动摇杆">
+    <div class="m-joy-ring"></div>
+    <div id="m-joy-knob" class="m-joy-knob"></div>
+  </div>
+
+  <div id="m-buttons">
+    <button type="button" id="m-ult" class="m-btn m-ult">幕<small>大招</small></button>
+    <button type="button" id="m-throw" class="m-btn m-minor">针<small>投掷</small></button>
+    <button type="button" id="m-parry" class="m-btn m-parry">反<small>弹反</small></button>
+    <button type="button" id="m-block" class="m-btn m-block">守<small>格挡</small></button>
+    <button type="button" id="m-dash" class="m-btn m-dash">闪<small>闪避</small></button>
+    <button type="button" id="m-attack" class="m-btn m-attack">斩</button>
+  </div>
+  <div id="m-tip">左侧摇杆移动 · 右侧按钮出招 · 自动锁定最近的客人</div>
 </div>
 
 <script>
@@ -5829,6 +6314,12 @@ button {
   const SKIP_INTRO = PARAMS.get('skipintro') === '1';
   const SKIP_STORY = PARAMS.get('skipstory') === '1';
   const DEBUG_FLOOR = clamp(parseInt(PARAMS.get('floor') || '0', 10) || 0, 0, 4);
+  const FORCE_MOBILE = PARAMS.get('mobile') === '1';
+  const IS_MOBILE = FORCE_MOBILE || (global.navigator && (
+    /Android|iPhone|iPad|iPod|Windows Phone|Mobile/i.test(global.navigator.userAgent) ||
+    ((global.navigator.maxTouchPoints || 0) > 1 && global.matchMedia && global.matchMedia('(pointer: coarse)').matches)
+  ));
+  if (IS_MOBILE) document.body.classList.add('mobile');
 
   const dom = {
     stage: $('stage'),
@@ -5913,7 +6404,33 @@ button {
     victoryStats: $('victory-stats'),
     victoryRetry: $('victory-retry'),
     toast: $('toast'),
-    error: $('error')
+    error: $('error'),
+    mobileUi: $('mobile-ui'),
+    rotateHint: $('rotate-hint'),
+    mFloorNumeral: $('m-floor-numeral'),
+    mFloorName: $('m-floor-name'),
+    mTimer: $('m-timer'),
+    mBoss: $('m-boss'),
+    mBossName: $('m-boss-name'),
+    mBossCn: $('m-boss-cn'),
+    mBossFill: $('m-boss-fill'),
+    mHpFill: $('m-hp-fill'),
+    mHpNum: $('m-hp-num'),
+    mGuardFill: $('m-guard-fill'),
+    mGuardNum: $('m-guard-num'),
+    mApplauseFill: $('m-applause-fill'),
+    mApplauseNum: $('m-applause-num'),
+    mPearls: $('m-pearls'),
+    mMoves: $('m-moves'),
+    mPause: $('m-pause'),
+    mJoystick: $('m-joystick'),
+    mJoyKnob: $('m-joy-knob'),
+    mAttack: $('m-attack'),
+    mThrow: $('m-throw'),
+    mDash: $('m-dash'),
+    mParry: $('m-parry'),
+    mBlock: $('m-block'),
+    mUlt: $('m-ult')
   };
 
   /* ---------------------------- state ---------------------------- */
@@ -5963,6 +6480,8 @@ button {
     rewardChoices: [],
     mouse: { x: 640, y: 360, left: false, right: false },
     keys: {},
+    touch: { x: 0, y: 0 },
+    isMobile: IS_MOBILE,
     meta: null,
     moveSheetOpen: false,
     bg: null,
@@ -6055,6 +6574,25 @@ button {
     if (!dom.stage || !dom.ui) return;
     const vw = dom.stage.clientWidth || W;
     const vh = dom.stage.clientHeight || H;
+
+    // Mobile menus use the real viewport. Only the live game is
+    // rendered through the 1280x720 HUD transform.
+    if (IS_MOBILE) {
+      if (!document.body.classList.contains('in-game')) {
+        dom.ui.style.width = '100%';
+        dom.ui.style.height = '100%';
+        dom.ui.style.transform = 'none';
+        return;
+      }
+      dom.ui.style.width = W + 'px';
+      dom.ui.style.height = H + 'px';
+      const ms = Math.min(vw / W, vh / H);
+      const mox = (vw - W * ms) / 2;
+      const moy = (vh - H * ms) / 2;
+      dom.ui.style.transform = `translate(${mox}px, ${moy}px) scale(${ms})`;
+      return;
+    }
+
     const title = document.body.classList.contains('title-mode');
     const scale = title ? Math.max(vw / W, vh / H) : Math.min(vw / W, vh / H);
     const ox = (vw - W * scale) / 2;
@@ -6067,6 +6605,7 @@ button {
     try { CEN.Audio.setBattle(false); } catch (e) { /* ignore */ }
     document.body.classList.toggle('title-mode',
       name === 'title' || name === 'guide' || name === 'roster' || name === 'story');
+    document.body.classList.remove('in-game');
     Object.keys(dom.screens).forEach((k) => {
       dom.screens[k].classList.toggle('active', k === name);
     });
@@ -6076,6 +6615,7 @@ button {
   function hideScreens() {
     hideToast();
     document.body.classList.remove('title-mode');
+    document.body.classList.add('in-game');
     Object.keys(dom.screens).forEach((k) => dom.screens[k].classList.remove('active'));
     fitUI();
   }
@@ -6781,9 +7321,10 @@ button {
     if (S.keys['d'] || S.keys['arrowright']) x += 1;
     if (S.keys['w'] || S.keys['arrowup']) y -= 1;
     if (S.keys['s'] || S.keys['arrowdown']) y += 1;
+    if (S.touch) { x += S.touch.x || 0; y += S.touch.y || 0; }
     if (x || y) {
       const l = Math.hypot(x, y);
-      x /= l; y /= l;
+      if (l > 1) { x /= l; y /= l; }
     }
     return { x, y };
   }
@@ -6844,6 +7385,7 @@ button {
     addParticle('ring', { x, y, r0: 18, r1: 86, life: 0.6, color: 'rgba(201,164,92,0.35)' });
     addBurst(x, y, info.color, kind === 'parry' ? 20 : 12);
     audio(kind === 'perfect' ? 'perfect' : kind === 'block' ? 'block' : 'parry');
+    buzz(kind === 'block' ? 18 : kind === 'perfect' ? 12 : 20);
     if (kind === 'perfect') S.slowmo = Math.max(S.slowmo || 0, 0.28);
   }
 
@@ -7361,6 +7903,26 @@ button {
         p.dashLeft += 1;
         if (p.dashLeft < p.dashMax) p.dashTimer = p.dashCd;
         else p.dashTimer = 0;
+      }
+    }
+
+    if (IS_MOBILE) {
+      let best = Infinity, tx = null, ty = null;
+      const consider = (o) => {
+        if (!o || o.dead) return;
+        const d = dist(p.x, p.y, o.x, o.y);
+        if (d < best) { best = d; tx = o.x; ty = o.y; }
+      };
+      consider(S.boss);
+      for (let i = 0; i < S.enemies.length; i++) consider(S.enemies[i]);
+      if (tx != null) {
+        S.mouse.x = tx; S.mouse.y = ty;
+      } else {
+        const d = inputDir();
+        if (d.x || d.y) {
+          S.mouse.x = p.x + d.x * 140;
+          S.mouse.y = p.y + d.y * 140;
+        }
       }
     }
 
@@ -8306,6 +8868,34 @@ button {
   }
 
   /* ---------------------------- HUD ---------------------------- */
+  function syncMobileHud(p) {
+    if (!IS_MOBILE || !dom.mobileUi) return;
+    const hpPct = clamp(p.hp / p.maxHp, 0, 1);
+    dom.mHpFill.style.width = (hpPct * 100) + '%';
+    dom.mHpNum.textContent = Math.ceil(Math.max(0, p.hp));
+    dom.mGuardFill.style.width = clamp(p.guard, 0, 100) + '%';
+    dom.mGuardNum.textContent = Math.round(p.guard);
+    dom.mApplauseFill.style.width = clamp(S.applause, 0, 100) + '%';
+    dom.mApplauseNum.textContent = Math.floor(S.applause);
+    dom.mPearls.textContent = '◈ ' + S.pearls;
+    dom.mTimer.textContent = formatTime(S.elapsed);
+    if (S.floor) {
+      dom.mFloorNumeral.textContent = S.floor.numeral || '';
+      dom.mFloorName.textContent = S.floor.name || '';
+    }
+    if (S.boss) {
+      dom.mBoss.classList.remove('hidden');
+      dom.mBossFill.style.width = clamp(S.boss.hp / S.boss.maxHp, 0, 1) * 100 + '%';
+      dom.mBossName.textContent = S.boss.en || S.boss.name || 'THE HOST';
+      dom.mBossCn.textContent = S.boss.name || '';
+    } else {
+      dom.mBoss.classList.add('hidden');
+    }
+    dom.mUlt.classList.toggle('ready', S.applause >= 100);
+    dom.mDash.classList.toggle('empty', p.dashLeft <= 0);
+    dom.mBlock.classList.toggle('down', !!p.blocking);
+  }
+
   function updateHud() {
     if (!S.player) return;
     const p = S.player;
@@ -8357,6 +8947,7 @@ button {
       dom.bossWrap.classList.add('hidden');
       dom.bossWrap.classList.remove('on');
     }
+    syncMobileHud(p);
   }
 
   /* ---------------------------- render ---------------------------- */
@@ -8611,8 +9202,8 @@ button {
     dom.stage.addEventListener('auxclick', (e) => e.preventDefault());
     dom.stage.addEventListener('dragstart', (e) => e.preventDefault());
     dom.stage.addEventListener('selectstart', (e) => e.preventDefault());
-    global.addEventListener('resize', fitUI);
-    global.addEventListener('orientationchange', fitUI);
+    global.addEventListener('resize', updateOrientation);
+    global.addEventListener('orientationchange', updateOrientation);
 
     global.addEventListener('blur', () => {
       S.keys = {};
@@ -8707,6 +9298,125 @@ button {
     document.addEventListener('visibilitychange', () => {
       if (document.hidden && S.mode === 'playing' && !S.moveSheetOpen) pause();
     });
+
+    if (IS_MOBILE) bindMobile();
+  }
+
+  function buzz(ms) {
+    try { if (IS_MOBILE && navigator.vibrate) navigator.vibrate(ms); } catch (e) { /* ignore */ }
+  }
+
+  function bindMobile() {
+    const joy = dom.mJoystick;
+    const knob = dom.mJoyKnob;
+    let joyId = null;
+
+    function joyMove(e) {
+      if (e.pointerId !== joyId) return;
+      const r = joy.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      const max = r.width * 0.32;
+      let dx = e.clientX - cx;
+      let dy = e.clientY - cy;
+      const len = Math.hypot(dx, dy);
+      if (len > max) { dx = dx / len * max; dy = dy / len * max; }
+      S.touch.x = dx / max;
+      S.touch.y = dy / max;
+      knob.style.transform = `translate(${dx}px, ${dy}px)`;
+    }
+
+    function joyEnd(e) {
+      if (joyId != null && e && e.pointerId !== joyId) return;
+      joyId = null;
+      S.touch.x = 0;
+      S.touch.y = 0;
+      knob.style.transform = 'translate(0px, 0px)';
+    }
+
+    joy.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse') return;
+      e.preventDefault();
+      joyId = e.pointerId;
+      try { joy.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+      joyMove(e);
+    });
+    joy.addEventListener('pointermove', joyMove);
+    joy.addEventListener('pointerup', joyEnd);
+    joy.addEventListener('pointercancel', joyEnd);
+    joy.addEventListener('lostpointercapture', joyEnd);
+
+    function hold(el, down, up) {
+      if (!el) return;
+      el.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'mouse') return;
+        e.preventDefault();
+        e.stopPropagation();
+        el.classList.add('down');
+        try { el.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+        down();
+      });
+      const end = (e) => {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
+        el.classList.remove('down');
+        if (up) up();
+      };
+      el.addEventListener('pointerup', end);
+      el.addEventListener('pointercancel', end);
+      el.addEventListener('lostpointercapture', () => { el.classList.remove('down'); if (up) up(); });
+    }
+
+    hold(dom.mAttack, () => { S.mouse.left = true; }, () => { S.mouse.left = false; });
+    hold(dom.mThrow, () => { S.mouse.right = true; }, () => { S.mouse.right = false; });
+    hold(dom.mBlock, () => { startBlock(); buzz(8); }, () => { endBlock(); });
+
+    const tap = (el, fn) => {
+      if (!el) return;
+      el.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'mouse') return;
+        e.preventDefault();
+        e.stopPropagation();
+        el.classList.add('down');
+        try { el.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+        fn();
+      });
+      const up = (e) => {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
+        el.classList.remove('down');
+      };
+      el.addEventListener('pointerup', up);
+      el.addEventListener('pointercancel', up);
+      el.addEventListener('lostpointercapture', up);
+    };
+
+    tap(dom.mDash, () => { startDash(); buzz(12); });
+    tap(dom.mParry, () => { doParry(); buzz(14); });
+    tap(dom.mUlt, () => { castUlt(); buzz(24); });
+
+    dom.mMoves.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openMoveSheet();
+    });
+    dom.mPause.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (S.mode === 'playing') pause();
+      else if (S.mode === 'paused') resume();
+    });
+
+    // Stop the browser from panning/zooming when a thumb lands on the arena.
+    canvas.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+    canvas.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+    dom.mobileUi.addEventListener('contextmenu', (e) => e.preventDefault());
+  }
+
+  function updateOrientation() {
+    if (!IS_MOBILE) { fitUI(); return; }
+    const portrait = global.innerHeight > global.innerWidth;
+    document.body.classList.toggle('portrait', portrait);
+    if (portrait && S.mode === 'playing' && !S.moveSheetOpen) pause();
+    fitUI();
   }
 
   /* ---------------------------- init ---------------------------- */
@@ -8725,6 +9435,7 @@ button {
     renderTitleMeta();
     syncHud();
     showOnly('title');
+    updateOrientation();
     requestAnimationFrame(frame);
     if (AUTOSTART) {
       setTimeout(() => {
