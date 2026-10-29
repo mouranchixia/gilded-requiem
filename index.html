@@ -9463,6 +9463,34 @@ body.mobile .cinema-caption { font-size: 14px; }
     return false;
   }
 
+  function findSafeSpot(tx, ty, r, ox, oy) {
+    const minX = ARENA.x + r, maxX = ARENA.x + ARENA.w - r;
+    const minY = ARENA.y + r, maxY = ARENA.y + ARENA.h - r;
+    tx = clamp(tx, minX, maxX);
+    ty = clamp(ty, minY, maxY);
+    if (!collidesWorld(tx, ty, r)) return { x: tx, y: ty };
+
+    /* 以目标点为圆心向外找最近的空地；优先贴着障碍物边缘，避免瞬移过远 */
+    for (let ring = 18; ring <= 260; ring += 14) {
+      const steps = Math.max(16, Math.ceil((Math.PI * 2 * ring) / 26));
+      for (let i = 0; i < steps; i++) {
+        const a = (i / steps) * Math.PI * 2;
+        const x = clamp(tx + Math.cos(a) * ring, minX, maxX);
+        const y = clamp(ty + Math.sin(a) * ring, minY, maxY);
+        if (!collidesWorld(x, y, r)) return { x, y };
+      }
+    }
+
+    /* 兜底：从目标点沿来路退回，找最后一个合法点 */
+    for (let i = 40; i >= 0; i--) {
+      const k = i / 40;
+      const x = clamp(lerp(ox, tx, k), minX, maxX);
+      const y = clamp(lerp(oy, ty, k), minY, maxY);
+      if (!collidesWorld(x, y, r)) return { x, y };
+    }
+    return { x: ox, y: oy };
+  }
+
   function clampArena(e, r) {
     e.x = clamp(e.x, ARENA.x + r, ARENA.x + ARENA.w - r);
     e.y = clamp(e.y, ARENA.y + r, ARENA.y + ARENA.h - r);
@@ -9909,11 +9937,15 @@ body.mobile .cinema-caption { font-size: 14px; }
 
     if (ch.id === 'valet') {
       const ox = p.x, oy = p.y;
-      const tx = clamp(S.mouse.x, 100, W - 100);
-      const ty = clamp(S.mouse.y, 140, H - 100);
-      p.x = tx;
-      p.y = ty;
+      const tx = clamp(S.mouse.x, ARENA.x + p.r, ARENA.x + ARENA.w - p.r);
+      const ty = clamp(S.mouse.y, ARENA.y + p.r, ARENA.y + ARENA.h - p.r);
+      const safe = findSafeSpot(tx, ty, p.r + 2, ox, oy);
+      p.mirror = {
+        t: 0, dur: 0.26,
+        fromX: ox, fromY: oy, toX: safe.x, toY: safe.y
+      };
       p.invuln = Math.max(p.invuln, 0.7);
+      p.aim = Math.atan2(safe.y - oy, safe.x - ox);
       const targets = S.enemies.concat(S.boss ? [S.boss] : []);
       targets.forEach((e) => {
         if (!e || e.dead) return;
@@ -9922,8 +9954,18 @@ body.mobile .cinema-caption { font-size: 14px; }
           addParticle('spark', { x: e.x, y: e.y, vx: 0, vy: -40, life: 0.3, maxLife: 0.3, color: '#cfe1e8', width: 2 });
         }
       });
+      /* 沿路径留下几层镜片残影，让瞬移看起来像“滑过去”而不是突然消失 */
+      for (let i = 1; i <= 4; i++) {
+        const k = i / 4;
+        addParticle('ring', {
+          x: lerp(ox, safe.x, k), y: lerp(oy, safe.y, k),
+          r0: 6, r1: 34 + i * 8, life: 0.34 + i * 0.05,
+          color: `rgba(207,225,232,${0.28 - i * 0.04})`
+        });
+      }
       addParticle('ring', { x: ox, y: oy, r0: 8, r1: 190, life: 0.7, color: 'rgba(207,225,232,0.65)' });
-      addParticle('ring', { x: tx, y: ty, r0: 6, r1: 80, life: 0.5, color: 'rgba(207,225,232,0.5)' });
+      addParticle('ring', { x: safe.x, y: safe.y, r0: 6, r1: 90, life: 0.55, color: 'rgba(207,225,232,0.55)' });
+      S.shake = Math.max(S.shake, 6);
       toast('镜遁 · MIRROR STEP', 1800);
       return;
     }
@@ -10023,6 +10065,46 @@ body.mobile .cinema-caption { font-size: 14px; }
         p.dashLeft += 1;
         if (p.dashLeft < p.dashMax) p.dashTimer = p.dashCd;
         else p.dashTimer = 0;
+      }
+    }
+
+    /* 镜遁：用 0.26 秒的缓动代替瞬间闪现，并保证落点不在障碍物里 */
+    if (p.mirror) {
+      const m = p.mirror;
+      m.t += dt;
+      const k = clamp(m.t / m.dur, 0, 1);
+      const ease = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      p.x = lerp(m.fromX, m.toX, ease);
+      p.y = lerp(m.fromY, m.toY, ease);
+      p.invuln = Math.max(p.invuln, 0.06);
+      if (Math.random() < 0.8) {
+        addParticle('spark', {
+          x: p.x + rand(-8, 8), y: p.y + rand(-10, 10),
+          vx: rand(-18, 18), vy: rand(-30, 8),
+          life: 0.34, maxLife: 0.34, color: 'rgba(207,225,232,0.5)', width: 1
+        });
+      }
+      if (k >= 1) {
+        p.x = m.toX;
+        p.y = m.toY;
+        p.mirror = null;
+        if (collidesWorld(p.x, p.y, p.r)) {
+          const safe = findSafeSpot(p.x, p.y, p.r + 2, p.x, p.y);
+          p.x = safe.x;
+          p.y = safe.y;
+        }
+        addParticle('ring', { x: p.x, y: p.y, r0: 6, r1: 120, life: 0.5, color: 'rgba(207,225,232,0.55)' });
+        addText(p.x, p.y - 30, '镜遁 · MIRROR', '#cfe1e8', 13);
+      }
+      return;
+    }
+
+    /* 兜底：任何原因导致玩家卡进障碍物，自动挪到最近空地 */
+    if (collidesWorld(p.x, p.y, p.r)) {
+      const safe = findSafeSpot(p.x, p.y, p.r + 2, p.x, p.y);
+      if (safe && !collidesWorld(safe.x, safe.y, p.r)) {
+        p.x = safe.x;
+        p.y = safe.y;
       }
     }
 
