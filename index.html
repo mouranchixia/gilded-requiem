@@ -1837,6 +1837,43 @@ button {
   .story-choice p { font-size: 9.5px; }
 }
 
+/* ---- defense: guard / parry / perfect dodge ---- */
+.meter-guard { margin-bottom: 7px; }
+.meter-guard .guard-track { height: 5px; }
+.meter-guard .guard-fill {
+  width: 100%;
+  height: 100%;
+  transform-origin: left center;
+  transition: transform 0.12s linear, background 0.2s;
+  box-shadow: 0 0 12px rgba(159, 220, 255, 0.35);
+}
+.meter-guard .meter-label b { color: #bfeaff; font-size: 12px; }
+.meter-guard.broken .meter-label span { color: #ff7b8a; }
+.meter-guard.broken .meter-label b { color: #ff7b8a; }
+.meter-guard.parrying .guard-track { box-shadow: 0 0 16px rgba(230,214,255,0.5); }
+.meter-guard.counter-ready .guard-track {
+  box-shadow: 0 0 18px rgba(255, 107, 129, 0.65);
+}
+.meter-guard.counter-ready .meter-label b { color: #ff9dac; text-shadow: 0 0 10px rgba(255,107,129,0.8); }
+.parry-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(circle at 50% 52%, rgba(240,232,255,0.42), rgba(150,120,220,0.16) 24%, transparent 58%),
+    linear-gradient(90deg, rgba(255,255,255,0.2), transparent 18%, transparent 82%, rgba(255,255,255,0.2));
+  box-shadow: inset 0 0 90px rgba(220,210,255,0.8);
+  mix-blend-mode: screen;
+}
+.parry-flash.on { animation: parryFlash 0.34s ease-out both; }
+@keyframes parryFlash {
+  0% { opacity: 0.95; filter: brightness(1.7); }
+  35% { opacity: 0.55; }
+  100% { opacity: 0; }
+}
+
 </style>
 </head>
 <body class="title-mode">
@@ -1887,6 +1924,13 @@ button {
             </div>
             <div class="meter-track"><div id="hp-fill" class="danger-fill"></div></div>
           </div>
+          <div class="meter meter-guard" id="guard-meter">
+            <div class="meter-label">
+              <span>守势 <em class="en">GUARD</em></span>
+              <b id="guard-num">100</b>
+            </div>
+            <div class="meter-track guard-track"><div id="guard-fill" class="guard-fill"></div></div>
+          </div>
           <div class="meter meter-applause" id="applause-meter">
             <div class="meter-label">
               <span>喝彩 <em class="en">APPLAUSE</em></span>
@@ -1899,13 +1943,14 @@ button {
         <div class="hud-center-bottom">
           <div id="combo-label" class="combo-label"></div>
           <div id="dash-pips" class="dash-pips"></div>
-          <div class="key-hint">SPACE 闪避 <i>·</i> R <span id="skill-hint">谢幕</span></div>
+          <div class="key-hint">Q 弹反 <i>·</i> SHIFT 格挡 <i>·</i> SPACE 完美闪避 <i>·</i> R <span id="skill-hint">谢幕</span></div>
         </div>
 
         <div id="relic-list" class="relic-list"></div>
       </div>
 
       <div id="hurt-flash" class="hurt-flash"></div>
+      <div id="parry-flash" class="parry-flash"></div>
       <div id="ultimate-tint" class="ultimate-tint"></div>
     </div>
 
@@ -2120,7 +2165,7 @@ button {
               <div><b>WASD</b><span>移动</span></div>
               <div><b>鼠标 / 左键</b><span>瞄准 · 刺杀</span></div>
               <div><b>右键</b><span>掷出帽针</span></div>
-              <div><b>SPACE</b><span>闪避</span></div>
+              <div><b>Q / SHIFT / SPACE</b><span>弹反 / 格挡 / 闪避</span></div>
               <div><b>R</b><span>谢幕</span></div>
               <div><b>ESC</b><span>暂停</span></div>
             </div>
@@ -2155,7 +2200,7 @@ button {
             <article class="guide-card">
               <span class="guide-index en">III</span>
               <h3>战斗</h3>
-              <p><b>WASD</b> 移动，鼠标瞄准；左键帽针三连，右键掷出帽针（可穿透），<b>Space</b> 闪避并获得短暂无敌。别被围住。</p>
+              <p><b>WASD</b> 移动，鼠标瞄准；左键帽针三连，右键掷出帽针（可穿透）。<b>Q</b> 在命中瞬间弹反，<b>SHIFT</b> 按住格挡，<b>SPACE</b> 在攻击触身瞬间闪避可触发完美闪避。三种守势都会积攒「断罪」，下一击更痛。</p>
             </article>
             <article class="guide-card">
               <span class="guide-index en">IV</span>
@@ -3189,6 +3234,13 @@ button {
   const BEAT = 60 / BPM;
   const BAR = BEAT * 3;
 
+  // battle movement: 4/4, faster, more pressure
+  const BATTLE_BPM = 144;
+  const BATTLE_BEAT = 60 / BATTLE_BPM;
+  const BATTLE_BAR = BATTLE_BEAT * 4;
+  let battleMode = false;
+  let battleBarIndex = 0;
+
   // D minor waltz: Dm — Bb — Gm — A
   const CHORDS = [
     { bass: 73.42, notes: [146.83, 174.61, 220.00], color: [220.00, 261.63, 329.63] },
@@ -3341,12 +3393,77 @@ button {
     }
   }
 
+  function scheduleBattleBar(time, index) {
+    if (!ac) return;
+    const chord = CHORDS[index % CHORDS.length];
+    const next = CHORDS[(index + 1) % CHORDS.length];
+    const beat = BATTLE_BEAT;
+
+    // low strings: relentless eighth-note pulse
+    for (let i = 0; i < 8; i++) {
+      tone(chord.bass * (i % 2 ? 2 : 1), time + i * beat * 0.5, 0.21, 'sawtooth', 0.028, {
+        attack: 0.006, to: chord.bass * 0.995
+      });
+    }
+
+    // pipe organ / choir pad
+    chord.notes.forEach((f, i) => {
+      tone(f, time + i * 0.012, BATTLE_BAR * 0.98, 'sawtooth', 0.012, { attack: 0.06, reverb: true });
+      tone(f * 2, time + 0.015 + i * 0.012, BATTLE_BAR * 0.82, 'triangle', 0.006, { attack: 0.18, reverb: true });
+    });
+    tone(chord.bass * 4, time + beat * 0.5, BATTLE_BAR * 0.9, 'sine', 0.016, { attack: 0.08, reverb: true });
+
+    // harpsichord-like sixteenth arpeggio
+    for (let i = 0; i < 16; i++) {
+      const n = chord.notes[i % chord.notes.length] * (i % 8 > 3 ? 2 : 1);
+      tone(n, time + i * beat * 0.25, 0.12, 'triangle', 0.010, { attack: 0.004, reverb: i % 4 === 0 });
+    }
+
+    // timpani on 1 and 3, brushed snare on 2 and 4
+    [0, 2].forEach((b) => {
+      tone(chord.bass, time + b * beat, 0.5, 'sine', 0.10, { to: chord.bass * 0.55, attack: 0.005 });
+      noise(time + b * beat, 0.12, 0.05, 220, 0.7, 'lowpass');
+    });
+    [1, 3].forEach((b) => {
+      noise(time + b * beat, 0.13, 0.028, 3200, 1.4, 'highpass');
+    });
+
+    // original descending lament motif, not a quotation
+    if (index % 2 === 0) {
+      const motif = [587.33, 523.25, 466.16, 440.00];
+      motif.forEach((f, i) => {
+        tone(f, time + beat * (0.5 + i * 0.5), 0.62, 'sine', 0.024, { attack: 0.02, reverb: true });
+      });
+    }
+
+    // dissonant organ stab on the last bar of each 4-bar phrase
+    if (index % 4 === 3) {
+      tone(277.18, time + beat * 2.5, 0.9, 'sawtooth', 0.022, { attack: 0.01, reverb: true });
+      tone(293.66, time + beat * 2.5, 0.9, 'sawtooth', 0.018, { attack: 0.01, reverb: true });
+      noise(time + beat * 2.5, 0.5, 0.03, 1800, 0.8, 'bandpass');
+    }
+
+    // bell and low choir hit every 8 bars
+    if (index % 8 === 0) {
+      tone(1174.66, time, 3.4, 'sine', 0.02, { attack: 0.01, reverb: true });
+      tone(73.42, time, BATTLE_BAR * 1.2, 'triangle', 0.035, { attack: 0.2, reverb: true });
+    }
+    // next-chord anticipation
+    tone(next.bass * 2, time + BATTLE_BAR - 0.09, 0.12, 'triangle', 0.02);
+  }
+
   function scheduler() {
     if (!ac) return;
     while (nextBarTime < now() + 1.2) {
-      scheduleBar(nextBarTime, barIndex);
-      nextBarTime += BAR;
-      barIndex++;
+      if (battleMode) {
+        scheduleBattleBar(nextBarTime, battleBarIndex);
+        nextBarTime += BATTLE_BAR;
+        battleBarIndex++;
+      } else {
+        scheduleBar(nextBarTime, barIndex);
+        nextBarTime += BAR;
+        barIndex++;
+      }
     }
   }
 
@@ -3364,6 +3481,11 @@ button {
     barIndex = 0;
     scheduler();
     musicTimer = setInterval(scheduler, 180);
+  };
+
+  A.setBattle = function (on) {
+    battleMode = !!on;
+    if (battleMode) battleBarIndex = 0;
   };
 
   A.stopMusic = function () {
@@ -3454,6 +3576,35 @@ button {
         break;
       case 'step':
         noise(t, 0.04, 0.008, 700, 1.2, 'bandpass');
+        break;
+      case 'block':
+        tone(146.83, t, 0.28, 'triangle', 0.08, { to: 110 });
+        noise(t, 0.16, 0.05, 1500, 1.2, 'bandpass', 3800);
+        tone(880, t + 0.005, 0.16, 'sine', 0.025, { to: 660, reverb: true });
+        break;
+      case 'parry':
+        noise(t, 0.09, 0.06, 5200, 2.4, 'highpass');
+        tone(1760, t, 0.55, 'sine', 0.05, { to: 2637, reverb: true });
+        tone(880, t + 0.01, 0.8, 'triangle', 0.04, { to: 1318.5, reverb: true });
+        tone(2637, t + 0.04, 0.5, 'sine', 0.02, { reverb: true });
+        break;
+      case 'perfect':
+        noise(t, 0.45, 0.04, 700, 0.8, 'lowpass');
+        tone(1318.51, t, 1.2, 'sine', 0.05, { to: 2637, reverb: true });
+        tone(659.25, t + 0.04, 1.4, 'triangle', 0.035, { reverb: true });
+        [1760, 2093, 2637].forEach((f, i) => tone(f, t + 0.1 + i * 0.07, 0.9, 'sine', 0.018, { reverb: true }));
+        break;
+      case 'guardbreak':
+        tone(73.42, t, 0.9, 'sawtooth', 0.1, { to: 41, attack: 0.005 });
+        noise(t, 0.5, 0.06, 700, 1.6, 'bandpass', 2400);
+        tone(220, t, 0.5, 'triangle', 0.04, { to: 82 });
+        break;
+      case 'parryReady':
+        tone(1568, t, 0.08, 'sine', 0.018);
+        break;
+      case 'reflect':
+        tone(2093, t, 0.35, 'sawtooth', 0.03, { to: 3136 });
+        noise(t, 0.12, 0.03, 5000, 1.8, 'highpass');
         break;
       default:
         break;
@@ -4343,6 +4494,55 @@ button {
     ctx.ellipse(p.x, p.y + 13, 27, 10, 0, 0, TAU);
     ctx.stroke();
 
+    // defense aura: guard fan, parry halo, perfect-dodge afterimage
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    if (p.blocking) {
+      ctx.strokeStyle = 'rgba(159,220,255,0.9)';
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 31 + Math.sin(t * 18) * 1.5, p.aim - 1.15, p.aim + 1.15);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(159,220,255,0.24)';
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 34, p.aim - 1.0, p.aim + 1.0);
+      ctx.stroke();
+    }
+    if (p.parryT > 0) {
+      const k = 1 - p.parryT / 0.22;
+      ctx.strokeStyle = 'rgba(230,214,255,' + (0.9 - k * 0.6) + ')';
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 26 + k * 26, 0, TAU);
+      ctx.stroke();
+      for (let i = 0; i < 3; i++) {
+        const a = t * 7 + i * TAU / 3;
+        ctx.fillStyle = 'rgba(242,223,174,0.85)';
+        ctx.beginPath();
+        ctx.arc(p.x + Math.cos(a) * 38, p.y + Math.sin(a) * 38, 1.8, 0, TAU);
+        ctx.fill();
+      }
+    }
+    if (p.perfectT > 0) {
+      const k = p.perfectT / 0.55;
+      ctx.strokeStyle = 'rgba(246,231,178,' + (k * 0.6) + ')';
+      ctx.lineWidth = 1.4;
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 18 + i * 13 + (1 - k) * 36, 0, TAU);
+        ctx.stroke();
+      }
+    }
+    if (p.counterT > 0) {
+      ctx.strokeStyle = 'rgba(255,90,120,0.5)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y + 6, 34, 0, TAU);
+      ctx.stroke();
+    }
+    ctx.restore();
+
     ctx.save();
     ctx.translate(p.x, p.y + bob);
     ctx.rotate(p.aim);
@@ -4519,6 +4719,30 @@ button {
     ctx.rotate(face);
     ctx.scale(1.26, 1.26);
 
+    // horror layer: twitching black tendrils, stitched grin, fever eyes
+    const twitch = Math.sin(t * 37 + e.x * 0.7) * 0.7;
+    ctx.save();
+    ctx.translate(twitch, Math.cos(t * 29 + e.y) * 0.6);
+    ctx.globalCompositeOperation = 'source-over';
+    for (let i = 0; i < 7; i++) {
+      const a = i / 7 * TAU + Math.sin(t * 2.2 + i) * 0.14;
+      const len = e.r * (1.25 + 0.24 * Math.sin(t * 3 + i * 2.1));
+      ctx.strokeStyle = i % 2 ? 'rgba(8,5,9,0.85)' : 'rgba(74,20,32,0.7)';
+      ctx.lineWidth = 1.1;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * e.r * 0.4, Math.sin(a) * e.r * 0.4);
+      ctx.quadraticCurveTo(
+        Math.cos(a + 0.4) * len * 0.8, Math.sin(a + 0.4) * len * 0.8,
+        Math.cos(a + 0.08) * len, Math.sin(a + 0.08) * len
+      );
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(126,39,51,0.55)';
+      ctx.beginPath();
+      ctx.arc(Math.cos(a + 0.08) * len, Math.sin(a + 0.08) * len, 0.9, 0, TAU);
+      ctx.fill();
+    }
+    ctx.restore();
+
     switch (e.type) {
       case 'waiter': drawWaiter(ctx, e, t); break;
       case 'debutante': drawDebutante(ctx, e, t); break;
@@ -4527,6 +4751,35 @@ button {
       case 'steward': drawSteward(ctx, e, t); break;
       case 'bouncer': drawBouncer(ctx, e, t); break;
       default: break;
+    }
+
+    // feverish eyes and surgical stitches, readable even in silhouette
+    if (e.hp > 0) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      const gl = 0.5 + Math.sin(t * 13 + e.y) * 0.25;
+      [[5.2, -3.4], [5.8, 3.2], [9.6, 0]].forEach((pt) => {
+        ctx.fillStyle = 'rgba(255,54,72,' + gl + ')';
+        ctx.beginPath();
+        ctx.arc(pt[0], pt[1], 1.45, 0, TAU);
+        ctx.fill();
+      });
+      ctx.restore();
+      ctx.strokeStyle = 'rgba(126,39,51,0.55)';
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(-8, -5);
+      ctx.lineTo(-3, -1);
+      ctx.lineTo(-6, 3);
+      ctx.lineTo(0, 6);
+      ctx.stroke();
+      for (let i = 0; i < 3; i++) {
+        const yy = -3 + i * 3;
+        ctx.beginPath();
+        ctx.moveTo(-5.5, yy);
+        ctx.lineTo(-2.5, yy + 1.4);
+        ctx.stroke();
+      }
     }
 
     ctx.restore();
@@ -4851,6 +5104,25 @@ button {
     ctx.restore();
 
     shadow(ctx, 0, 54, 54, 18, 0.5);
+
+    // writhing horror tendrils
+    ctx.save();
+    ctx.strokeStyle = phase ? 'rgba(190, 24, 48, 0.55)' : 'rgba(120, 14, 32, 0.42)';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 11; i++) {
+      const a = -Math.PI * 0.92 + i * 0.17 + Math.sin(t * 1.3 + i) * 0.06;
+      const len = 48 + (i % 4) * 14 + Math.sin(t * 2.1 + i) * 8;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * 22, Math.sin(a) * 20 - 4);
+      ctx.quadraticCurveTo(
+        Math.cos(a) * (len * 0.55) + Math.sin(t + i) * 12,
+        Math.sin(a) * (len * 0.7) - 22 + Math.cos(t * 0.9 + i) * 8,
+        Math.cos(a) * len,
+        Math.sin(a) * len + 6
+      );
+      ctx.stroke();
+    }
+    ctx.restore();
 
     // variant silhouettes: mirror bride / seven candles / empty coat
     if (b.variant === 'mirror') {
@@ -5383,6 +5655,10 @@ button {
     muteBtn: $('mute-btn'),
     hpFill: $('hp-fill'),
     hpNum: $('hp-num'),
+    guardFill: $('guard-fill'),
+    guardNum: $('guard-num'),
+    guardMeter: $('guard-meter'),
+    parryFlash: $('parry-flash'),
     applauseFill: $('applause-fill'),
     applauseNum: $('applause-num'),
     applauseMeter: $('applause-meter'),
@@ -5588,6 +5864,7 @@ button {
 
   function showOnly(name) {
     hideToast();
+    try { CEN.Audio.setBattle(false); } catch (e) { /* ignore */ }
     document.body.classList.toggle('title-mode',
       name === 'title' || name === 'guide' || name === 'roster' || name === 'story');
     Object.keys(dom.screens).forEach((k) => {
@@ -5788,7 +6065,12 @@ button {
       attackCd: 0, throwCd: 0, attackAnim: 0, comboStep: 0,
       dashLeft: 1, dashMax: 1, dashTimer: 0, dashActive: 0, dashDir: 0,
       hurtFlash: 0, killStacks: 0, floorSlowUsed: false, alive: true,
-      walkT: 0, dead: false
+      walkT: 0, dead: false,
+      guard: 100, guardMax: 100, guardRegen: 0, guardBroken: 0,
+      blocking: false, blockT: 0, blockHeld: false, blockFlash: 0,
+      parryT: 0, parryCd: 0, parryFlash: 0, parryReadyFlash: 0,
+      dodgeWindow: 0, perfectT: 0, afterimageT: 0,
+      counterT: 0, counterKind: '', defenseGlow: 0
     }, baseStats());
     p.charId = S.char ? S.char.id : 'lady';
     p.char = S.char;
@@ -5941,6 +6223,7 @@ button {
     S.mode = 'playing';
     hideScreens();
     syncHud();
+    try { CEN.Audio.setBattle(true); } catch (e) { /* ignore */ }
     S.enemies = [];
     S.bullets = [];
     S.pickups = [];
@@ -6309,16 +6592,210 @@ button {
     moveEntity(p, dx, dy, p.r);
   }
 
-  function playerHurt(dmg, source) {
+  function awardDefense(kind, x, y) {
     const p = S.player;
-    if (!p || S.mode !== 'playing') return;
-    if (p.invuln > 0) return;
+    if (!p) return;
+    const info = {
+      parry:   { label: '弹反 · PARRY',   color: '#e6d6ff', appl: 16, shake: 10, guard: 22 },
+      perfect: { label: '完美闪避 · PERFECT', color: '#f6e7b2', appl: 11, shake: 6, guard: 16 },
+      block:   { label: '格挡 · BLOCK',   color: '#9fdcff', appl: 6,  shake: 4,  guard: 0 },
+      counter: { label: '断罪 · CONDEMN', color: '#ff6b81', appl: 8,  shake: 7,  guard: 8 }
+    }[kind];
+    if (!info) return;
+    p.counterT = 5;
+    p.counterKind = kind;
+    p.defenseGlow = 1;
+    p.guard = Math.min(p.guardMax, p.guard + info.guard);
+    p.parryReadyFlash = 0.6;
+    S.applause = Math.min(100, S.applause + info.appl * (p.applauseMult || 1));
+    S.shake = Math.max(S.shake, info.shake);
+    addText(x, y - 34, info.label, info.color, 17);
+    addParticle('ring', { x, y, r0: 8, r1: 54, life: 0.45, color: 'rgba(230,214,255,0.7)' });
+    addParticle('ring', { x, y, r0: 18, r1: 86, life: 0.6, color: 'rgba(201,164,92,0.35)' });
+    addBurst(x, y, info.color, kind === 'parry' ? 20 : 12);
+    audio(kind === 'perfect' ? 'perfect' : kind === 'block' ? 'block' : 'parry');
+    if (kind === 'perfect') S.slowmo = Math.max(S.slowmo || 0, 0.28);
+  }
+
+  function doParry() {
+    const p = S.player;
+    if (!p || S.mode !== 'playing' || p.parryCd > 0 || p.blockHeld) return;
+    if (p.guardBroken > 0 || p.guard < 8) {
+      addText(p.x, p.y - 26, '守势不足', '#9fdcff', 13);
+      return;
+    }
+    p.guard -= 8;
+    p.parryT = 0.22;
+    p.parryCd = 0.55;
+    p.blocking = false;
+    p.attackAnim = 0.35;
+    p.defenseGlow = 1;
+    S.slashes.push({
+      x: p.x, y: p.y, angle: p.aim, r: 76, life: 0.2, maxLife: 0.2,
+      third: true, style: 'parry'
+    });
+    addParticle('ring', { x: p.x, y: p.y, r0: 12, r1: 62, life: 0.22, color: 'rgba(230,214,255,0.8)' });
+    audio('parryReady');
+  }
+
+  function startBlock() {
+    const p = S.player;
+    if (!p || S.mode !== 'playing' || p.guard <= 0 || p.guardBroken > 0) return;
+    p.blockHeld = true;
+    p.blocking = true;
+    p.parryT = 0;
+    p.blockT = 0.2;
+  }
+
+  function endBlock() {
+    const p = S.player;
+    if (!p) return;
+    p.blockHeld = false;
+    p.blocking = false;
+  }
+
+  function breakGuard() {
+    const p = S.player;
+    if (!p) return;
+    p.guard = 0;
+    p.guardBroken = 1.8;
+    p.blockHeld = false;
+    p.blocking = false;
+    p.blockFlash = 0.4;
+    p.staggerT = 0.9;
+    S.shake = Math.max(S.shake, 12);
+    addText(p.x, p.y - 28, '守势崩溃 · GUARD BREAK', '#ff6b81', 16);
+    addParticle('ring', { x: p.x, y: p.y, r0: 20, r1: 96, life: 0.6, color: 'rgba(255,90,110,0.5)' });
+    audio('guardbreak');
+  }
+
+  function perfectDodge() {
+    const p = S.player;
+    if (!p) return;
+    p.perfectT = 0.55;
+    p.afterimageT = 0.28;
+    awardDefense('perfect', p.x, p.y);
+    addParticle('ring', { x: p.x, y: p.y, r0: 14, r1: 120, life: 0.55, color: 'rgba(246,231,178,0.65)' });
+    for (let i = 0; i < 3; i++) {
+      addParticle('smoke', {
+        x: p.x - Math.cos(p.aim) * i * 8, y: p.y - Math.sin(p.aim) * i * 8,
+        vx: rand(-20, 20), vy: rand(-20, 20), life: 0.55, maxLife: 0.55,
+        size: rand(8, 16), color: 'rgba(246,231,178,0.18)'
+      });
+    }
+  }
+
+  function updateDefense(dt) {
+    const p = S.player;
+    if (!p) return;
+    p.parryT = Math.max(0, p.parryT - dt);
+    p.parryCd = Math.max(0, p.parryCd - dt);
+    p.parryFlash = Math.max(0, p.parryFlash - dt);
+    p.parryReadyFlash = Math.max(0, p.parryReadyFlash - dt);
+    p.blockFlash = Math.max(0, p.blockFlash - dt);
+    p.blockT = Math.max(0, p.blockT - dt);
+    p.dodgeWindow = Math.max(0, p.dodgeWindow - dt);
+    p.perfectT = Math.max(0, p.perfectT - dt);
+    p.afterimageT = Math.max(0, p.afterimageT - dt);
+    p.counterT = Math.max(0, p.counterT - dt);
+    p.defenseGlow = Math.max(0, p.defenseGlow - dt * 2.6);
+    p.guardBroken = Math.max(0, p.guardBroken - dt);
+    p.staggerT = Math.max(0, (p.staggerT || 0) - dt);
+
+    const wasBlocking = p.blocking;
+    p.blocking = !!p.blockHeld && p.guard > 0 && p.guardBroken <= 0;
+    if (p.blocking) {
+      p.guard = Math.max(0, p.guard - 10 * dt);
+      p.guardRegen = 0;
+      if (p.guard <= 0) breakGuard();
+    } else {
+      p.guardRegen = Math.max(0, p.guardRegen - dt);
+      if (p.guardRegen <= 0 && p.guardBroken <= 0) {
+        p.guard = Math.min(p.guardMax, p.guard + 22 * dt);
+      }
+    }
+    if (wasBlocking && !p.blocking && p.blockHeld) p.blockHeld = false;
+    if (p.guardBroken > 0) p.blockHeld = false;
+
+    if (dom.guardFill) {
+      const ratio = Math.max(0, p.guard / p.guardMax);
+      dom.guardFill.style.transform = 'scaleX(' + ratio.toFixed(3) + ')';
+      dom.guardFill.style.background = p.guardBroken > 0
+        ? 'linear-gradient(90deg,#5a1119,#ff5c6e)'
+        : 'linear-gradient(90deg,#4d7f8f,#9fdcff,#e6f7ff)';
+    }
+    if (dom.guardNum) dom.guardNum.textContent = Math.ceil(p.guard);
+    if (dom.guardMeter) dom.guardMeter.classList.toggle('broken', p.guardBroken > 0);
+  }
+
+  function playerHurt(dmg, source, opts) {
+    const p = S.player;
+    if (!p || S.mode !== 'playing' || p.hp <= 0) return false;
+    const isBullet = !!(opts && opts.bullet);
+    const sx = source && typeof source.x === 'number' ? source.x : p.x + Math.cos(p.aim) * 60;
+    const sy = source && typeof source.y === 'number' ? source.y : p.y + Math.sin(p.aim) * 60;
+    const sourceAngle = angleTo(p.x, p.y, sx, sy);
+    const facing = Math.abs(normAngle(sourceAngle - p.aim)) < 1.35;
+
+    if (p.parryT > 0 && source && !isBullet) {
+      p.parryT = 0;
+      p.parryFlash = 0.35;
+      p.invuln = Math.max(p.invuln, 0.45);
+      if (source.stunT !== undefined) source.stunT = Math.max(source.stunT || 0, 1.3);
+      if (source.hitFlash !== undefined) source.hitFlash = 0.25;
+      awardDefense('parry', p.x + Math.cos(sourceAngle) * 22, p.y + Math.sin(sourceAngle) * 22);
+      if (source.hp !== undefined) applyDamage(source, 34 * p.damageMult, true, 'parry');
+      return true;
+    }
+
+    if (p.parryT > 0 && isBullet && source) {
+      p.parryT = 0;
+      p.parryFlash = 0.35;
+      p.invuln = Math.max(p.invuln, 0.45);
+      source.friendly = true;
+      source.vx = -source.vx * 1.9;
+      source.vy = -source.vy * 1.9;
+      source.damage = (source.damage || 10) * 2.4;
+      source.color = '#e6d6ff';
+      source.reflected = true;
+      awardDefense('parry', source.x, source.y);
+      return true;
+    }
+
+    if (p.dodgeWindow > 0) {
+      p.dodgeWindow = 0;
+      p.invuln = Math.max(p.invuln, 0.35);
+      perfectDodge();
+      return true;
+    }
+
+    if (p.blocking && facing && p.guard > 0 && p.guardBroken <= 0) {
+      const drain = Math.max(8, dmg * 1.6);
+      p.guard -= drain;
+      p.guardRegen = 0.6;
+      p.blockFlash = 0.3;
+      p.blockT = 0.18;
+      const chip = Math.max(1, dmg * 0.18);
+      p.hp -= chip;
+      S.damageTaken += chip;
+      p.hurtFlash = 0.18;
+      p.invuln = Math.max(p.invuln, 0.16);
+      S.shake = Math.max(S.shake, 4);
+      awardDefense('block', p.x, p.y);
+      addText(p.x, p.y - 46, '-' + Math.round(chip) + ' 格挡', '#9fdcff', 12);
+      if (p.guard <= 0) breakGuard();
+      if (p.hp <= 0) { p.hp = 0; die(); }
+      return true;
+    }
+
+    if (p.invuln > 0) return false;
     let d = Math.max(1, dmg) * p.damageTaken;
     if (S.ult.active) d *= 0.7;
     p.hp -= d;
     S.damageTaken += d;
     p.hurtFlash = 0.35;
     p.invuln = 0.55;
+    p.guardRegen = 1.0;
     S.combo = 0;
     S.comboT = 0;
     S.shake = Math.max(S.shake, 9);
@@ -6334,6 +6811,7 @@ button {
       p.hp = 0;
       die();
     }
+    return true;
   }
 
   function tryMelee() {
@@ -6352,6 +6830,7 @@ button {
     p.attackCd = prof.cd / Math.max(0.65, p.attackSpeed);
     p.comboStep = p.comboStep >= 3 ? 1 : p.comboStep + 1;
     const step = p.comboStep;
+    const counterReady = p.counterT > 0;
     p.attackAnim = 1;
     const range = step === 3 ? prof.third : prof.range;
     const arc = step === 3 ? prof.thirdArc : prof.arc;
@@ -6372,6 +6851,7 @@ button {
       if (a > arc) return;
       hit = true;
       let dmg = prof.dmg[step];
+      if (counterReady) dmg *= 1.9;
       if (ch.id === 'count') dmg *= 1.1;
       if (ch.id === 'valet' && p.afterDash > 0) {
         dmg *= 1.8;
@@ -6418,6 +6898,13 @@ button {
     }
 
     if (hit) {
+      if (counterReady) {
+        p.counterT = 0;
+        addText(p.x, p.y - 44, '断罪 · CONDEMN', '#ff8ba0', 16);
+        addParticle('ring', { x: p.x, y: p.y, r0: 30, r1: 100, life: 0.5, color: 'rgba(255,90,120,0.55)' });
+        S.slashes.push({ x: p.x, y: p.y, angle: p.aim, r: 94, life: 0.24, maxLife: 0.24, third: true, style: 'counter' });
+        S.applause = Math.min(100, S.applause + 8 * p.applauseMult);
+      }
       S.shake = Math.max(S.shake, step === 3 ? 6 : 2.5);
       audio(step === 3 ? 'hit' : 'stab');
     }
@@ -6432,6 +6919,8 @@ button {
     p.attackAnim = 0.5;
     let dmg = p.throwDamage;
     let pierce = p.throwPierce;
+    const counterReady = p.counterT > 0;
+    if (counterReady) { dmg *= 1.9; p.counterT = 0; }
     if (ch.id === 'lady') { dmg += 1; }
     if (ch.id === 'valet') {
       for (let i = 0; i < 3; i++) {
@@ -6457,6 +6946,7 @@ button {
     p.dashLeft -= 1;
     p.dashActive = 0.17;
     p.dashDir = a;
+    p.dodgeWindow = 0.12;
     p.invuln = Math.max(p.invuln, 0.28);
     p.dashTimer = p.dashCd;
     p.afterDash = 0.5;
@@ -6631,6 +7121,7 @@ button {
     p.throwCd = Math.max(0, p.throwCd - dt);
     p.attackAnim = Math.max(0, p.attackAnim - dt * 7);
     p.hurtFlash = Math.max(0, p.hurtFlash - dt * 4);
+    updateDefense(dt);
 
     if (p.dashLeft < p.dashMax) {
       p.dashTimer -= dt;
@@ -6661,7 +7152,11 @@ button {
     } else {
       const d = inputDir();
       if (d.x || d.y) {
-        movePlayer(d.x * p.speed * dt, d.y * p.speed * dt);
+        let moveSpeed = p.speed;
+        if (p.blocking) moveSpeed *= 0.42;
+        if (p.guardBroken > 0) moveSpeed *= 0.55;
+        if (p.staggerT > 0) moveSpeed *= 0.7;
+        movePlayer(d.x * moveSpeed * dt, d.y * moveSpeed * dt);
         p.walkT += dt;
         if (Math.random() < 0.035) {
           addParticle('petal', {
@@ -6900,7 +7395,7 @@ button {
       }
       addBurst(e.x, e.y, P.silver, 8);
       audio('glass');
-      if (dist(e.x, e.y, p.x, p.y) < 92) playerHurt(e.damage, 'valet');
+      if (dist(e.x, e.y, p.x, p.y) < 92) playerHurt(e.damage, e);
       e.state = 'recover';
       e.stateT = 0.4;
       e.cooldown = rand(0.6, 1.1);
@@ -6931,7 +7426,9 @@ button {
       const e = S.enemies[i];
       if (e.dead) continue;
       e.hitFlash = Math.max(0, e.hitFlash - dt * 4);
+      e.stunT = Math.max(0, (e.stunT || 0) - dt);
       e.slowT = Math.max(0, e.slowT - dt);
+      if (e.stunT > 0) continue;
       e.face = angleTo(e.x, e.y, p.x, p.y);
       const speed = e.speed * (e.slowT > 0 ? 0.45 : 1) * ultSlow * Math.max(0.6, p.enemySpeed);
 
@@ -6982,7 +7479,7 @@ button {
         moveEntity(e, Math.cos(e.lungeDir) * speed * dt, Math.sin(e.lungeDir) * speed * dt, e.r);
         if (!e.didHit && dist(e.x, e.y, p.x, p.y) < e.r + p.r + 7) {
           e.didHit = true;
-          playerHurt(e.damage, e.type);
+          playerHurt(e.damage, e);
         }
         if (e.stateT <= 0) {
           e.state = 'recover';
@@ -6994,7 +7491,7 @@ button {
         moveEntity(e, Math.cos(e.lungeDir) * speed * dt, Math.sin(e.lungeDir) * speed * dt, e.r);
         if (!e.didHit && dist(e.x, e.y, p.x, p.y) < e.r + p.r + 8) {
           e.didHit = true;
-          playerHurt(e.damage * 1.2, 'bouncer');
+          playerHurt(e.damage * 1.2, e);
         }
         if (e.stateT <= 0) {
           e.state = 'recover';
@@ -7143,7 +7640,7 @@ button {
       const a = angleTo(b.x, b.y, p.x, p.y);
       if (dist(b.x, b.y, p.x, p.y) < 400 &&
         Math.abs(normAngle(a - b.face)) < 1.35) {
-        playerHurt(22, 'boss');
+        playerHurt(22, b);
       }
       S.slashes.push({ x: b.x, y: b.y, angle: b.face, r: 390, life: 0.35, maxLife: 0.35, third: true });
       addParticle('ring', { x: b.x, y: b.y, r0: 20, r1: 390, life: 0.7, color: 'rgba(242,223,174,0.4)' });
@@ -7153,7 +7650,7 @@ button {
       (b.zones || []).forEach((z) => {
         addBurst(z.x, z.y, P.goldHi, 16);
         addParticle('ring', { x: z.x, y: z.y, r0: 8, r1: z.r + 18, life: 0.5, color: 'rgba(242,223,174,0.65)' });
-        if (dist(z.x, z.y, p.x, p.y) < z.r + p.r) playerHurt(16, 'glass');
+        if (dist(z.x, z.y, p.x, p.y) < z.r + p.r) playerHurt(16, b);
       });
       audio('glass');
       S.shake = Math.max(S.shake, 8);
@@ -7183,14 +7680,14 @@ button {
       for (let i = 0; i < 12; i++) {
         spawnBullet(b.x, b.y, i / 12 * Math.PI * 2, 210, 11, 'boss', '#9fbfae', 5, false, 0, 3.4);
       }
-      if (dist(b.x, b.y, p.x, p.y) < 170) playerHurt(18, 'mirror');
+      if (dist(b.x, b.y, p.x, p.y) < 170) playerHurt(18, b);
       addParticle('ring', { x: b.x, y: b.y, r0: 12, r1: 180, life: 0.6, color: 'rgba(159,191,174,0.6)' });
       audio('glass');
     } else if (pattern === 'feast') {
       (b.zones || []).forEach((z) => {
         addBurst(z.x, z.y, P.goldHi, 18);
         addParticle('ring', { x: z.x, y: z.y, r0: 8, r1: z.r + 20, life: 0.5, color: 'rgba(242,223,174,0.65)' });
-        if (dist(z.x, z.y, p.x, p.y) < z.r + p.r) playerHurt(15, 'feast');
+        if (dist(z.x, z.y, p.x, p.y) < z.r + p.r) playerHurt(15, b);
       });
       b.hp = Math.min(b.maxHp, b.hp + 16);
       b.zones = [];
@@ -7203,7 +7700,7 @@ button {
       for (let i = 0; i < 5; i++) {
         spawnBullet(b.x, b.y, b.face + (i - 2) * 0.14, 250, 12, 'boss', P.oxbloodHi, 5, false, 0, 3);
       }
-      if (dist(b.x, b.y, p.x, p.y) < 220) playerHurt(14, 'debt');
+      if (dist(b.x, b.y, p.x, p.y) < 220) playerHurt(14, b);
       audio('boss');
     }
     if (b.phase2 && pattern !== 'waltz') {
@@ -7221,6 +7718,8 @@ button {
     if (!b || !p || b.dead) return;
     b.hitFlash = Math.max(0, b.hitFlash - dt * 4);
     b.contactCd = Math.max(0, b.contactCd - dt);
+    b.stunT = Math.max(0, (b.stunT || 0) - dt);
+    if (b.stunT > 0) return;
     b.face = angleTo(b.x, b.y, p.x, p.y);
     const slow = S.ult.active ? 0.35 : 1;
     const sp = b.speed * Math.max(0.7, p.enemySpeed) * slow;
@@ -7230,7 +7729,7 @@ button {
       const d = dist(b.x, b.y, p.x, p.y);
       if (d > 235) moveEntity(b, Math.cos(b.face) * sp * dt, Math.sin(b.face) * sp * dt, b.r);
       if (b.contactCd <= 0 && d < b.r + p.r + 4) {
-        playerHurt(12, 'boss');
+        playerHurt(12, b);
         b.contactCd = 1.2;
       }
       if (b.cooldown <= 0) beginBossAttack();
@@ -7315,7 +7814,7 @@ button {
         }
       } else if (!gone && !b.friendly && p) {
         if (dist(b.x, b.y, p.x, p.y) < b.r + p.r) {
-          playerHurt(b.damage, b.kind === 'boss' ? 'boss' : 'bullet');
+          playerHurt(b.damage, b, { bullet: true });
           gone = true;
         }
       }
@@ -7404,7 +7903,7 @@ button {
                 }
               });
             } else if (p && dist(po.x, po.y, p.x, p.y) < po.r + p.r) {
-              playerHurt(3, 'poison');
+              playerHurt(3, null);
             }
           }
         } else if (po.kind === 'perfume') {
@@ -7614,6 +8113,9 @@ button {
     }
 
     dom.hurtFlash.classList.toggle('on', p.hurtFlash > 0);
+    dom.parryFlash.classList.toggle('on', p.parryFlash > 0);
+    dom.guardMeter.classList.toggle('parrying', p.parryT > 0);
+    dom.guardMeter.classList.toggle('counter-ready', p.counterT > 0);
 
     if (S.boss) {
       dom.bossWrap.classList.remove('hidden');
@@ -7680,6 +8182,53 @@ button {
     S.bullets.forEach((b) => CEN.draw.bullet(ctx, b, S.t));
     S.slashes.forEach((s) => CEN.draw.slash(ctx, s));
     S.particles.forEach((pt) => CEN.draw.particle(ctx, pt));
+
+    // defense spectacle: prismatic streaks and sigils
+    if (S.player && (S.mode === 'playing' || S.mode === 'paused')) {
+      const p = S.player;
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      if (p.parryFlash > 0) {
+        const k = p.parryFlash / 0.35;
+        for (let i = 0; i < 10; i++) {
+          const a = i / 10 * Math.PI * 2 + S.t * 2;
+          ctx.strokeStyle = i % 2 ? 'rgba(230,214,255,' + (k * 0.7) + ')' : 'rgba(246,231,178,' + (k * 0.45) + ')';
+          ctx.lineWidth = 1.2 + (1 - k) * 2;
+          ctx.beginPath();
+          ctx.moveTo(p.x + Math.cos(a) * (22 + (1 - k) * 12), p.y + Math.sin(a) * (22 + (1 - k) * 12));
+          ctx.lineTo(p.x + Math.cos(a) * (78 + (1 - k) * 90), p.y + Math.sin(a) * (78 + (1 - k) * 90));
+          ctx.stroke();
+        }
+        ctx.strokeStyle = 'rgba(230,214,255,' + (k * 0.8) + ')';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 44 + (1 - k) * 46, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      if (p.perfectT > 0) {
+        const k = p.perfectT / 0.55;
+        for (let i = 0; i < 3; i++) {
+          const rr = 26 + i * 15 + (1 - k) * 52;
+          ctx.strokeStyle = 'rgba(246,231,178,' + (k * (0.55 - i * 0.12)) + ')';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, rr, S.t * 1.5 + i, S.t * 1.5 + i + Math.PI * 1.35);
+          ctx.stroke();
+        }
+        ctx.fillStyle = 'rgba(246,231,178,' + (k * 0.10) + ')';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 110, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      if (p.defenseGlow > 0) {
+        ctx.strokeStyle = 'rgba(201,164,92,' + (p.defenseGlow * 0.16) + ')';
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 52, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
 
     CEN.draw.vignette(ctx);
     if (S.player && S.rule && S.rule.id === 'dim' && S.mode === 'playing') {
@@ -7779,12 +8328,15 @@ button {
       }
       if (k === 'm') { toggleMute(); return; }
       if (S.mode !== 'playing') return;
+      if (k === 'q') { doParry(); return; }
+      if (e.key === 'Shift') { startBlock(); return; }
       if (k === 'r') { castUlt(); return; }
       if (k === ' ') { startDash(); return; }
       S.keys[k] = true;
     });
 
     global.addEventListener('keyup', (e) => {
+      if (e.key === 'Shift') endBlock();
       S.keys[e.key.toLowerCase()] = false;
     });
 
@@ -7822,6 +8374,7 @@ button {
       S.keys = {};
       S.mouse.left = false;
       S.mouse.right = false;
+      endBlock();
     });
 
     dom.startBtn.addEventListener('click', (e) => {
