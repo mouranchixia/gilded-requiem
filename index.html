@@ -1602,6 +1602,7 @@ button {
 }
 .roster-card.locked { opacity: 0.58; }
 .roster-card.locked .roster-portrait svg { filter: grayscale(0.75) brightness(0.62); }
+.roster-portrait .portrait-deco { width: 100%; height: 100%; object-fit: contain; display: block; }
 .roster-portrait {
   flex: 0 0 104px;
   height: 150px;
@@ -5455,7 +5456,10 @@ body.mobile .cinema-caption { font-size: 14px; }
       ctx.save();
       ctx.shadowColor = 'rgba(201,164,92,0.7)';
       ctx.shadowBlur = 10;
-      CEN.playerArt[p.charId](ctx, p, t);
+      ctx.translate(p.x, p.y);
+      ctx.scale(1.25, 1.25);
+      const localPlayer = Object.assign({}, p, { x: 0, y: 0 });
+      CEN.playerArt[p.charId](ctx, localPlayer, t);
       ctx.restore();
       ctx.restore();
       return;
@@ -5650,8 +5654,13 @@ body.mobile .cinema-caption { font-size: 14px; }
     shadow(ctx, 0, 10, e.r * 1.35, e.r * 0.5, 0.46);
     ctx.save();
     const enemyDir = Math.cos(face) >= 0 ? 1 : -1;
-    ctx.rotate(-Math.PI / 2);
-    ctx.scale(1.7 * enemyDir, 1.7);
+    const decoEnemy = !!(CEN.enemyArt && CEN.enemyArt[e.type]);
+    if (decoEnemy) {
+      ctx.scale(1.2 * enemyDir, 1.2);
+    } else {
+      ctx.rotate(-Math.PI / 2);
+      ctx.scale(1.7 * enemyDir, 1.7);
+    }
 
     // horror layer: twitching black tendrils, stitched grin, fever eyes
     if (!CEN.enemyArt) {
@@ -5691,7 +5700,10 @@ body.mobile .cinema-caption { font-size: 14px; }
       ctx.save();
       ctx.shadowColor = 'rgba(255,70,90,0.55)';
       ctx.shadowBlur = 9;
-      CEN.enemyArt[e.type](ctx, e, t);
+      // D.enemy already translated/scaled into world space; the deco art
+      // paints around its own local origin, so feed it a zeroed proxy.
+      const localEnemy = Object.assign({}, e, { x: 0, y: 0 });
+      CEN.enemyArt[e.type](ctx, localEnemy, t);
       ctx.restore();
     } else {
       switch (e.type) {
@@ -7241,6 +7253,548 @@ body.mobile .cinema-caption { font-size: 14px; }
 </script>
 <script>
 /* ============================================================
+   GILDED REQUIEM — Art-Deco cast art, second pass
+   Tall, elongated 1920s fashion silhouettes that match the
+   title card and cinematic panels. No chibi heads, no big eyes.
+   ============================================================ */
+(function (global) {
+  'use strict';
+  const CEN = (global.CEN = global.CEN || {});
+  const TAU = Math.PI * 2;
+  const P = {
+    ink: '#07060a', ink2: '#120d17', ink3: '#1c1422',
+    gold: '#c9a45c', goldHi: '#f0d9a4', goldDim: 'rgba(201,164,92,.38)',
+    ivory: '#e8ddc4', skin: '#d2bda7', skinShade: '#b39a84',
+    wine: '#7e2733', wineHi: '#b34a5a', emerald: '#3f7f6b', emeraldHi: '#7fc4a8',
+    teal: '#326b76', tealHi: '#8bc8cc', silver: '#c9d3d8', silverHi: '#eef3f5',
+    rose: '#c98a9a', violet: '#6b5a8c', absinthe: '#8fbf78', black: '#030204'
+  };
+
+  function line(ctx, x1, y1, x2, y2, color, w, alpha) {
+    ctx.save();
+    ctx.globalAlpha = alpha == null ? 1 : alpha;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = w || 1;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function poly(ctx, pts, fill, stroke, w, alpha) {
+    ctx.save();
+    ctx.globalAlpha = alpha == null ? 1 : alpha;
+    ctx.beginPath();
+    pts.forEach((q, i) => (i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])));
+    ctx.closePath();
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = w || 1; ctx.stroke(); }
+    ctx.restore();
+  }
+
+  function curve(ctx, pts, fill, stroke, w, alpha) {
+    ctx.save();
+    ctx.globalAlpha = alpha == null ? 1 : alpha;
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length - 1; i += 2) {
+      const mx = (pts[i][0] + pts[i + 1][0]) / 2;
+      const my = (pts[i][1] + pts[i + 1][1]) / 2;
+      ctx.quadraticCurveTo(pts[i][0], pts[i][1], mx, my);
+    }
+    const last = pts[pts.length - 1];
+    ctx.lineTo(last[0], last[1]);
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = w || 1; ctx.stroke(); }
+    ctx.restore();
+  }
+
+  function oval(ctx, x, y, rx, ry, fill, stroke, w, rot, alpha) {
+    ctx.save();
+    ctx.globalAlpha = alpha == null ? 1 : alpha;
+    ctx.beginPath();
+    ctx.ellipse(x, y, rx, ry, rot || 0, 0, TAU);
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = w || 1; ctx.stroke(); }
+    ctx.restore();
+  }
+
+  function rim(ctx, pts, color, w) {
+    ctx.save();
+    ctx.strokeStyle = color || P.gold;
+    ctx.lineWidth = w || 1;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    pts.forEach((q, i) => (i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])));
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /* Small, elegant profile head: one visible eye, no anime proportions. */
+  function head(ctx, x, y, o) {
+    o = o || {};
+    const hair = o.hair || P.ink;
+    const skin = o.skin || P.skin;
+    // neck
+    line(ctx, x, y + 4, x + 1, y + 8, o.neck || P.skinShade, 3.2);
+    // hair mass behind
+    oval(ctx, x - 0.8, y - 0.4, 6.0, 6.8, hair, null, 0, -0.08);
+    // face
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(x + 1.6, y + 0.2, 4.5, 5.2, 0.05, 0, TAU);
+    ctx.fillStyle = skin;
+    ctx.fill();
+    ctx.restore();
+    // jaw / chin rim
+    rim(ctx, [[x + 5.3, y - 1.3], [x + 4.9, y + 2.4], [x + 3.8, y + 4.4], [x + 1.4, y + 5.2]], 'rgba(201,164,92,.55)', 0.7);
+    // hair fringe
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x - 4.8, y + 1.2);
+    ctx.quadraticCurveTo(x - 5.6, y - 5.6, x + 0.2, y - 7.0);
+    ctx.quadraticCurveTo(x + 5.2, y - 6.2, x + 5.9, y - 2.2);
+    ctx.quadraticCurveTo(x + 3.0, y - 4.0, x + 0.6, y - 3.6);
+    ctx.quadraticCurveTo(x - 2.2, y - 3.2, x - 4.8, y + 1.2);
+    ctx.fillStyle = hair;
+    ctx.fill();
+    ctx.restore();
+    // eye
+    ctx.save();
+    ctx.strokeStyle = o.eye || P.goldHi;
+    ctx.lineWidth = 1.05;
+    ctx.beginPath();
+    ctx.moveTo(x + 2.2, y - 1.7);
+    ctx.quadraticCurveTo(x + 3.5, y - 2.4, x + 4.6, y - 1.5);
+    ctx.stroke();
+    ctx.fillStyle = o.eye || P.goldHi;
+    ctx.beginPath();
+    ctx.arc(x + 3.6, y - 1.55, 0.62, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+    // brow
+    line(ctx, x + 2.0, y - 3.0, x + 4.7, y - 2.9, 'rgba(50,30,30,.7)', 0.7);
+    // nose and mouth
+    rim(ctx, [[x + 5.0, y - 1.1], [x + 5.7, y + 0.2], [x + 4.9, y + 0.7]], 'rgba(110,70,62,.55)', 0.55);
+    line(ctx, x + 3.6, y + 2.6, x + 5.2, y + 2.9, o.lip || P.wine, 1.15);
+    // earring
+    oval(ctx, x - 3.7, y + 3.6, 0.7, 1.4, o.earring || P.goldHi, null, 0, 0, 1);
+  }
+
+  function topHat(ctx, x, y, color, wide) {
+    poly(ctx, [[x - 8, y + 1], [x + 8, y + 1], [x + 6.6, y - 1.6], [x - 6.6, y - 1.6]], color || P.ink, P.goldDim, 0.7);
+    poly(ctx, [[x - 5.1, y - 1.6], [x + 5.1, y - 1.6], [x + 4.2, y - 15], [x - 3.8, y - 15]], color || P.ink, P.goldDim, 0.7);
+    line(ctx, x - 4.6, y - 8, x + 4.6, y - 8, P.gold, 0.8);
+    if (wide) line(ctx, x - 8.5, y - 0.6, x + 8.5, y - 0.6, P.gold, 0.5);
+  }
+
+  function wideHat(ctx, x, y, color, brim) {
+    oval(ctx, x, y, brim || 12, 3.1, color || P.ink, P.goldDim, 0.8, 0, 1);
+    curve(ctx, [[x - 6, y], [x - 4, y - 12], [x, y - 14], [x + 4, y - 12], [x + 6, y]], color || P.ink, P.goldDim, 0.8);
+    line(ctx, x - 6.2, y - 1, x + 6.2, y - 1, P.gold, 0.7);
+  }
+
+  function boot(ctx, x, y, color) {
+    poly(ctx, [[x - 2, y - 20], [x + 1, y - 20], [x + 1.5, y - 1], [x + 5.5, y + 1], [x - 2, y + 1]], color || P.ink, P.goldDim, 0.5);
+  }
+
+  function begin(ctx, o, scale) {
+    const dir = Math.cos(o.aim || 0) >= 0 ? 1 : -1;
+    ctx.save();
+    ctx.translate(o.x, o.y + Math.sin((o.t || 0) * 2.6 + o.x * 0.02) * 0.7);
+    ctx.scale(dir * (scale || 1), scale || 1);
+    return () => ctx.restore();
+  }
+
+  function sigil(ctx, x, y, c) {
+    oval(ctx, x, y, 2.4, 0.9, null, c || P.goldDim, 0.6, 0, 0.9);
+  }
+
+  /* ------------------------------------------------------------
+     THE SIX GUESTS
+     ------------------------------------------------------------ */
+
+  function lady(ctx, p, t) {
+    const done = begin(ctx, p, 1);
+    // train
+    curve(ctx, [[-3, 6], [-15, 12], [-28, 28], [-18, 30], [-8, 22], [0, 12]], 'rgba(13,9,17,.96)', 'rgba(201,164,92,.45)', 0.7);
+    // gown
+    curve(ctx, [[-5, -15], [-9, 0], [-7, 14], [0, 27], [8, 14], [7, -2], [4, -15]], P.ink2, P.goldDim, 0.8);
+    curve(ctx, [[-13, -8], [-17, 10], [-12, 24], [-2, 27], [3, 18], [0, 4]], 'rgba(24,16,30,.92)', 'rgba(201,164,92,.5)', 0.7);
+    // deco seams
+    line(ctx, -6, -6, -2, 25, P.goldDim, 0.55);
+    line(ctx, 3, -6, 5, 24, P.goldDim, 0.55);
+    poly(ctx, [[-4, -20], [4, -20], [6, -9], [0, -4], [-6, -9]], '#1a111f', P.gold, 0.8); // bodice
+    oval(ctx, 0, -9, 1.5, 1.5, P.emerald, P.goldHi, 0.5); // brooch
+    // arms
+    line(ctx, -6, -17, -13, -2, P.skinShade, 2.1);
+    line(ctx, 6, -17, 12, -6, P.skinShade, 2.1);
+    oval(ctx, -13, -2, 1.2, 1.2, P.skin);
+    // fan hand
+    oval(ctx, 13, -6, 1.2, 1.2, P.skin);
+    // feather crest
+    for (let i = 0; i < 7; i++) {
+      const a = -1.9 + i * 0.27;
+      line(ctx, -1, -32, -1 + Math.cos(a) * 17, -33 + Math.sin(a) * 16, P.gold, 0.7, 0.8);
+      line(ctx, -1, -32, -1 + Math.cos(a) * 13, -33 + Math.sin(a) * 12, 'rgba(201,164,92,.35)', 2.3, 0.5);
+    }
+    // head / veiled hat
+    head(ctx, 0, -27, { hair: P.ink, eye: P.emeraldHi, lip: P.wine, earring: P.goldHi });
+    wideHat(ctx, 0, -30, P.ink, 10.5);
+    // veil
+    ctx.save();
+    ctx.globalAlpha = 0.18;
+    poly(ctx, [[-7, -28], [8, -28], [14, -8], [2, 2], [-10, -8]], 'rgba(232,221,196,.5)', null);
+    ctx.restore();
+    // fan
+    ctx.save();
+    ctx.translate(15, -8);
+    ctx.rotate(-0.55);
+    for (let i = 0; i < 6; i++) {
+      const a = -1.1 + i * 0.22;
+      line(ctx, 0, 0, Math.cos(a) * 13, Math.sin(a) * 13, P.gold, 0.65);
+    }
+    ctx.beginPath();
+    ctx.arc(0, 0, 13, -1.15, 0.18);
+    ctx.strokeStyle = P.gold; ctx.lineWidth = 0.9; ctx.stroke();
+    ctx.restore();
+    // hat pin
+    line(ctx, 2, -36, 8, -43, P.goldHi, 1.1);
+    done();
+    sigil(ctx, 0, 28, P.goldDim);
+  }
+
+  function count(ctx, p, t) {
+    const done = begin(ctx, p, 1);
+    // legs
+    boot(ctx, -3, 28, P.ink);
+    boot(ctx, 4, 28, P.ink);
+    // tailcoat
+    poly(ctx, [[-9, -19], [9, -19], [7, -6], [4, 5], [12, 18], [8, 20], [0, 10], [-2, 20], [-8, 16], [-6, 5], [-9, -3]], '#1b2732', P.goldDim, 0.8);
+    poly(ctx, [[-4, -18], [4, -18], [3, 2], [-3, 2]], P.ivory, P.goldDim, 0.5); // shirt
+    poly(ctx, [[-4, -18], [0, -14], [4, -18]], P.ink, null); // collar
+    line(ctx, 0, -14, 0, -10, P.wine, 1.2); // tie
+    // arms
+    line(ctx, -7, -16, -13, -1, '#1b2732', 2.4);
+    line(ctx, 7, -16, 12, -2, '#1b2732', 2.4);
+    oval(ctx, -13, -1, 1.2, 1.2, P.skin);
+    oval(ctx, 12, -2, 1.2, 1.2, P.skin);
+    // cane
+    line(ctx, 12, -2, 17, 28, P.gold, 1.0);
+    oval(ctx, 12, -2, 1.8, 1.8, null, P.goldHi, 0.8);
+    // head
+    head(ctx, 0, -27, { hair: P.silver, eye: P.tealHi, lip: P.wine, earring: P.gold });
+    topHat(ctx, 0, -31, P.ink);
+    // monocle
+    oval(ctx, 4.3, -28, 2.0, 2.0, null, P.goldHi, 0.8);
+    line(ctx, 5.2, -26.5, 7.0, -22, P.gold, 0.5);
+    // silver hair streak
+    line(ctx, -5, -30, -7, -24, P.silverHi, 0.8, 0.8);
+    done();
+    sigil(ctx, 0, 29, P.goldDim);
+  }
+
+  function valet(ctx, p, t) {
+    const done = begin(ctx, p, 1);
+    boot(ctx, -3, 28, P.ink);
+    boot(ctx, 4, 28, P.ink);
+    // tailcoat
+    poly(ctx, [[-8, -19], [8, -19], [6, -4], [12, 20], [6, 20], [0, 8], [-5, 21], [-9, 16], [-6, -4]], '#12303a', P.goldDim, 0.8);
+    poly(ctx, [[-4, -17], [4, -17], [3, 3], [-3, 3]], P.ivory, null);
+    // shard shoulder
+    poly(ctx, [[-9, -19], [-16, -14], [-13, -7], [-7, -11]], P.silver, P.goldHi, 0.6, 0.75);
+    poly(ctx, [[8, -19], [14, -15], [12, -9], [7, -12]], P.silver, P.goldHi, 0.6, 0.55);
+    // arms
+    line(ctx, -7, -16, -13, 0, '#12303a', 2.3);
+    line(ctx, 7, -16, 13, 0, '#12303a', 2.3);
+    oval(ctx, -13, 0, 1.2, 1.2, P.skin);
+    oval(ctx, 13, 0, 1.2, 1.2, P.skin);
+    // daggers
+    line(ctx, -13, 0, -18, -11, P.silverHi, 1.5);
+    line(ctx, 13, 0, 18, -11, P.silverHi, 1.5);
+    line(ctx, -13, 0, -17, 8, P.gold, 0.8);
+    line(ctx, 13, 0, 17, 8, P.gold, 0.8);
+    // mirror mask
+    poly(ctx, [[-1, -33], [8, -30], [7, -21], [-2, -23]], '#8da4ad', P.goldHi, 0.9, 0.9);
+    line(ctx, 1, -31, 6, -30, P.ink, 1.0);
+    line(ctx, 1, -27, 5, -26, 'rgba(255,255,255,.7)', 0.8);
+    // hair
+    oval(ctx, 0, -29, 5.4, 6.2, P.silver, null, 0, 0.08);
+    line(ctx, -5, -31, -7, -24, P.silverHi, 0.7);
+    // neck
+    line(ctx, 1, -23, 1, -19, P.skinShade, 2.6);
+    // hat pin
+    line(ctx, 3, -35, 9, -39, P.goldHi, 0.9);
+    done();
+    sigil(ctx, 0, 29, P.teal);
+  }
+
+  function diva(ctx, p, t) {
+    const done = begin(ctx, p, 1);
+    // gown
+    curve(ctx, [[-5, -15], [-8, 2], [-5, 26], [4, 28], [7, 4], [4, -15]], '#1d4a36', P.goldDim, 0.8);
+    curve(ctx, [[-8, -4], [-16, 12], [-10, 27], [-4, 27], [-5, 8]], 'rgba(29,74,54,.8)', 'rgba(201,164,92,.4)', 0.7);
+    line(ctx, -4, -5, -2, 27, 'rgba(127,196,168,.5)', 0.6);
+    // boa
+    for (let i = 0; i < 5; i++) {
+      curve(ctx, [[-9 + i * 4, -20 - i], [-13 + i * 4, -13], [-8 + i * 4, -8], [-4 + i * 4, -13]], null, 'rgba(201,164,92,.45)', 0.7);
+    }
+    // arms
+    line(ctx, -5, -16, -12, -3, P.skinShade, 2.1);
+    line(ctx, 5, -16, 13, -6, P.skinShade, 2.1);
+    oval(ctx, -12, -3, 1.2, 1.2, P.skin);
+    // absinthe glass
+    poly(ctx, [[12, -6], [15, -6], [14, 3], [13, 3]], 'rgba(143,191,120,.5)', P.goldHi, 0.5);
+    line(ctx, 13, -6, 13, -10, P.goldHi, 0.6);
+    // head
+    head(ctx, 0, -27, { hair: P.ink, eye: P.absinthe, lip: P.wine, earring: P.goldHi });
+    // bob and feather band
+    line(ctx, -6, -31, -3, -34, P.gold, 1.0);
+    for (let i = 0; i < 4; i++) line(ctx, -2, -33, -7 + i * 4, -40 - (i % 2) * 2, P.gold, 0.55);
+    // long cigarette holder
+    line(ctx, 12, -6, 21, -14, P.ink3, 0.8);
+    oval(ctx, 21, -14, 0.9, 0.9, P.wineHi);
+    done();
+    sigil(ctx, 0, 29, P.emeraldHi);
+  }
+
+  function watchman(ctx, p, t) {
+    const done = begin(ctx, p, 1);
+    boot(ctx, -4, 28, P.ink);
+    boot(ctx, 4, 28, P.ink);
+    // long coat
+    poly(ctx, [[-10, -20], [10, -20], [9, -2], [13, 24], [2, 25], [0, 8], [-4, 25], [-13, 22], [-8, -2]], '#2a151d', P.goldDim, 0.8);
+    line(ctx, 0, -18, 0, 22, 'rgba(201,164,92,.4)', 0.6);
+    // belt
+    poly(ctx, [[-9, -4], [9, -4], [9, 0], [-9, 0]], P.ink, P.gold, 0.5);
+    oval(ctx, 0, -2, 1.2, 1.2, P.gold);
+    // arms
+    line(ctx, -8, -17, -15, 1, '#2a151d', 2.5);
+    line(ctx, 8, -17, 14, -2, '#2a151d', 2.5);
+    oval(ctx, -15, 1, 1.3, 1.3, P.skin);
+    oval(ctx, 14, -2, 1.3, 1.3, P.skin);
+    // lantern
+    line(ctx, -15, 1, -17, 8, P.gold, 0.8);
+    ctx.save();
+    ctx.shadowColor = 'rgba(240,217,164,.85)';
+    ctx.shadowBlur = 10;
+    poly(ctx, [[-20, 8], [-14, 8], [-15, 16], [-19, 16]], 'rgba(240,217,164,.22)', P.goldHi, 0.8);
+    oval(ctx, -17, 12, 1.3, 1.3, P.goldHi);
+    ctx.restore();
+    // bell at belt
+    curve(ctx, [[9, 3], [11, 6], [12, 12], [7, 12], [8, 6]], P.gold, P.goldDim, 0.6);
+    // head
+    head(ctx, 0, -27, { hair: P.ink, eye: P.wineHi, lip: P.wine });
+    wideHat(ctx, 0, -30, P.ink, 13);
+    // beard-shadow
+    poly(ctx, [[-1, -25], [5, -25], [4, -21], [0, -20]], 'rgba(30,20,24,.35)', null);
+    done();
+    sigil(ctx, 0, 29, P.wineHi);
+  }
+
+  function tailor(ctx, p, t) {
+    const done = begin(ctx, p, 1);
+    boot(ctx, -2, 28, P.ink);
+    boot(ctx, 4, 28, P.ink);
+    // dress + apron
+    curve(ctx, [[-6, -15], [-9, 2], [-6, 25], [5, 27], [7, 4], [4, -15]], '#3a2228', P.goldDim, 0.8);
+    poly(ctx, [[-4, -8], [4, -8], [3, 22], [-3, 22]], 'rgba(232,221,196,.75)', null);
+    line(ctx, -3, 22, 3, 22, P.gold, 0.6);
+    // measuring tape
+    ctx.save();
+    ctx.strokeStyle = P.gold;
+    ctx.lineWidth = 1.0;
+    ctx.beginPath();
+    ctx.moveTo(-8, -4);
+    ctx.bezierCurveTo(-2, 2, -6, 10, 2, 14);
+    ctx.stroke();
+    ctx.restore();
+    // arms
+    line(ctx, -5, -15, -11, -1, P.skinShade, 2.0);
+    line(ctx, 5, -15, 12, -6, P.skinShade, 2.0);
+    oval(ctx, -11, -1, 1.1, 1.1, P.skin);
+    // shears
+    line(ctx, 12, -6, 20, -17, P.silverHi, 1.6);
+    line(ctx, 12, -6, 20, 1, P.silverHi, 1.6);
+    oval(ctx, 12, -6, 1.4, 1.4, null, P.goldHi, 0.7);
+    // head
+    head(ctx, 0, -27, { hair: P.ink, eye: P.rose, lip: P.wine, earring: P.goldHi });
+    // bun and scissors pin
+    oval(ctx, -5, -31, 3.3, 3.3, P.ink, P.goldDim, 0.6);
+    line(ctx, -5, -34, -9, -39, P.gold, 0.8);
+    line(ctx, -4, -34, 0, -39, P.gold, 0.8);
+    done();
+    sigil(ctx, 0, 29, P.rose);
+  }
+
+  /* ------------------------------------------------------------
+     THE HOUSE
+     ------------------------------------------------------------ */
+
+  function waiter(ctx, e, t) {
+    const done = begin(ctx, e, 1);
+    boot(ctx, -3, 28, P.ink);
+    boot(ctx, 4, 28, P.ink);
+    // long tailcoat
+    poly(ctx, [[-8, -18], [8, -18], [6, -2], [11, 22], [5, 20], [0, 8], [-5, 21], [-10, 15], [-7, -2]], '#241c2c', P.goldDim, 0.7);
+    poly(ctx, [[-4, -17], [4, -17], [3, 3], [-3, 3]], P.ivory, null);
+    line(ctx, 0, -16, 0, -12, P.wine, 1.2);
+    // long arms
+    line(ctx, -7, -16, -16, -3, '#241c2c', 2.0);
+    line(ctx, 7, -16, 17, -6, '#241c2c', 2.0);
+    oval(ctx, -16, -3, 1.1, 1.1, P.skinShade);
+    oval(ctx, 17, -6, 1.1, 1.1, P.skinShade);
+    // tray
+    line(ctx, 9, -12, 17, -6, P.gold, 0.8);
+    oval(ctx, 20, -12, 8, 2.2, P.silver, P.gold, 0.6, 0);
+    for (let i = 0; i < 3; i++) {
+      const gx = 16 + i * 3;
+      poly(ctx, [[gx, -16], [gx + 1.6, -16], [gx + 1.2, -13], [gx + 0.4, -13]], 'rgba(143,191,120,.6)', P.goldHi, 0.4);
+    }
+    // hollow face
+    oval(ctx, 0, -27, 5.6, 6.4, P.ink, P.goldDim, 0.7);
+    oval(ctx, 2.2, -28, 0.8, 0.8, P.goldHi);
+    oval(ctx, 4.6, -28, 0.8, 0.8, P.goldHi);
+    line(ctx, 1.0, -24.5, 4.4, -24.5, P.wine, 0.8);
+    // collar
+    poly(ctx, [[-5, -22], [0, -18], [5, -22]], P.ink, P.goldDim, 0.5);
+    done();
+  }
+
+  function debutante(ctx, e, t) {
+    const done = begin(ctx, e, 1);
+    // gown
+    curve(ctx, [[-5, -15], [-9, 4], [-6, 27], [5, 28], [7, 5], [4, -15]], '#1c5a42', P.goldDim, 0.8);
+    line(ctx, -5, -4, -2, 27, P.goldDim, 0.5);
+    // arms
+    line(ctx, -5, -15, -10, -1, P.skinShade, 1.9);
+    line(ctx, 5, -15, 9, -4, P.skinShade, 1.9);
+    // huge fan
+    ctx.save();
+    ctx.translate(2, -8);
+    ctx.rotate(-0.2);
+    for (let i = 0; i < 8; i++) {
+      const a = -1.3 + i * 0.17;
+      line(ctx, 0, 0, Math.cos(a) * 18, Math.sin(a) * 18, P.gold, 0.6);
+    }
+    ctx.beginPath();
+    ctx.arc(0, 0, 18, -1.35, 0.05);
+    ctx.strokeStyle = P.gold; ctx.lineWidth = 1.0; ctx.stroke();
+    ctx.restore();
+    // eyes on fan
+    [-8, 0, 8].forEach((fx, i) => {
+      oval(ctx, 4 + fx * 0.8, -18 - i * 0.5, 1.2, 0.8, P.wineHi);
+      oval(ctx, 4 + fx * 0.8, -18 - i * 0.5, 0.4, 0.4, P.ivory);
+    });
+    // head behind fan
+    head(ctx, 0, -27, { hair: P.ink, eye: P.emeraldHi, lip: P.wine });
+    // headdress
+    for (let i = 0; i < 5; i++) line(ctx, 0, -32, -8 + i * 4, -39 - (i % 2) * 2, P.gold, 0.55);
+    done();
+  }
+
+  function moth(ctx, e, t) {
+    const done = begin(ctx, e, 1);
+    // wings
+    for (let s = -1; s <= 1; s += 2) {
+      ctx.save();
+      ctx.scale(s, 1);
+      curve(ctx, [[2, -14], [20, -26], [27, -10], [22, 6], [10, 12]], 'rgba(107,90,140,.42)', 'rgba(201,164,92,.55)', 1.0);
+      line(ctx, 3, -12, 22, -20, P.gold, 0.7);
+      line(ctx, 3, -8, 24, -6, P.gold, 0.5);
+      oval(ctx, 18, -16, 2.4, 2.4, null, P.goldHi, 0.7);
+      ctx.restore();
+    }
+    // body
+    curve(ctx, [[-4, -12], [-3, 8], [4, 8], [5, -12]], P.ink3, P.goldDim, 0.7);
+    // fur collar
+    for (let i = 0; i < 6; i++) line(ctx, -5 + i * 2, -13, -8 + i * 2, -17, P.goldDim, 1.4, 0.7);
+    // antennae
+    line(ctx, -1, -28, -8, -39, P.gold, 0.7);
+    line(ctx, 2, -28, 9, -39, P.gold, 0.7);
+    // mask
+    oval(ctx, 0, -27, 5.2, 6.2, P.ink, P.goldDim, 0.7);
+    oval(ctx, -1.8, -28, 1.4, 1.0, P.wineHi);
+    oval(ctx, 2.4, -28, 1.4, 1.0, P.wineHi);
+    oval(ctx, -1.8, -28, 0.5, 0.5, P.ivory);
+    oval(ctx, 2.4, -28, 0.5, 0.5, P.ivory);
+    done();
+  }
+
+  function valetEnemy(ctx, e, t) {
+    const done = begin(ctx, e, 1);
+    boot(ctx, -3, 28, P.ink);
+    boot(ctx, 4, 28, P.ink);
+    poly(ctx, [[-8, -18], [8, -18], [6, -2], [12, 20], [5, 20], [0, 8], [-5, 21], [-10, 16], [-6, -2]], '#12343c', P.goldDim, 0.7);
+    // long arms
+    line(ctx, -7, -15, -16, 2, '#12343c', 2.1);
+    line(ctx, 7, -15, 16, 2, '#12343c', 2.1);
+    line(ctx, -16, 2, -21, -8, P.silverHi, 1.3);
+    line(ctx, 16, 2, 21, -8, P.silverHi, 1.3);
+    // mirror mask
+    poly(ctx, [[-1, -33], [8, -30], [7, -21], [-2, -23]], '#8da4ad', P.goldHi, 0.8, 0.9);
+    line(ctx, 1, -31, 6, -30, P.ink, 0.9);
+    // hair
+    oval(ctx, 0, -29, 5.4, 6.2, P.silver, null, 0, 0.08);
+    line(ctx, -5, -31, -7, -24, P.silverHi, 0.7);
+    done();
+  }
+
+  function steward(ctx, e, t) {
+    const done = begin(ctx, e, 1);
+    boot(ctx, -3, 28, P.ink);
+    boot(ctx, 3, 28, P.ink);
+    // round body
+    oval(ctx, 0, -2, 11, 13, '#1e3e28', P.goldDim, 0.8);
+    // apron
+    poly(ctx, [[-6, -10], [6, -10], [5, 10], [-5, 10]], 'rgba(232,221,196,.8)', null);
+    line(ctx, 0, -10, 0, 9, P.goldDim, 0.5);
+    // arms
+    line(ctx, -8, -8, -15, 0, P.skinShade, 2.0);
+    line(ctx, 8, -8, 14, 0, P.skinShade, 2.0);
+    // bottle
+    poly(ctx, [[-17, 0], [-13, 0], [-13, 8], [-17, 8]], 'rgba(143,191,120,.6)', P.goldHi, 0.5);
+    line(ctx, -17, 0, -16, -5, P.goldHi, 0.5);
+    // cleaver
+    line(ctx, 14, 0, 20, -6, P.silverHi, 2.2);
+    // head
+    head(ctx, 0, -23, { hair: P.ink, eye: P.absinthe, lip: P.wine });
+    // bald / cap
+    oval(ctx, -1, -28, 5.0, 3.0, P.ink, P.goldDim, 0.6);
+    done();
+  }
+
+  function bouncer(ctx, e, t) {
+    const done = begin(ctx, e, 1);
+    boot(ctx, -4, 28, P.ink);
+    boot(ctx, 5, 28, P.ink);
+    // huge shoulders
+    poly(ctx, [[-14, -18], [14, -18], [17, 8], [10, 12], [-10, 12], [-17, 8]], '#3a1720', P.goldDim, 0.8);
+    line(ctx, 0, -16, 0, 10, 'rgba(201,164,92,.35)', 0.6);
+    // arms
+    line(ctx, -12, -14, -20, 4, P.skinShade, 3.0);
+    line(ctx, 12, -14, 20, 4, P.skinShade, 3.0);
+    // cudgel
+    line(ctx, 20, 4, 27, -10, '#2a1a14', 3.0);
+    oval(ctx, 28, -11, 3.6, 3.6, '#3a2018', P.gold, 0.6);
+    // tiny head
+    oval(ctx, 0, -24, 4.6, 5.0, P.ink, P.goldDim, 0.7);
+    oval(ctx, -1.5, -25, 0.8, 0.8, P.goldHi);
+    oval(ctx, 1.8, -25, 0.8, 0.8, P.goldHi);
+    line(ctx, -1, -21, 2, -21, P.wine, 0.8);
+    // chains
+    for (let i = 0; i < 4; i++) line(ctx, -11 + i * 3, -17, -12 + i * 3, 8, 'rgba(201,164,92,.3)', 0.7);
+    done();
+  }
+
+  CEN.playerArt = { lady, count, valet, diva, watchman, tailor };
+  CEN.enemyArt = { waiter, debutante, moth, valet: valetEnemy, steward, bouncer };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+/* ============================================================
    GILDED REQUIEM — cinematics
    Inline SVG comic panels for the prologue and six endings.
    No external assets; every panel is drawn from primitives.
@@ -8181,6 +8735,23 @@ body.mobile .cinema-caption { font-size: 14px; }
   }
 
   /* ---------------------------- roster / story ---------------------------- */
+  const rosterArtCache = {};
+  function rosterArt(id) {
+    if (rosterArtCache[id]) return rosterArtCache[id];
+    const cv = document.createElement('canvas');
+    cv.width = 208; cv.height = 300;
+    const g = cv.getContext('2d');
+    g.save();
+    g.scale(1.9, 1.9);
+    CEN.draw.player(g, {
+      x: 55, y: 88, aim: 0, charId: id, accent: '#c9a45c',
+      hp: 100, maxHp: 100, invuln: 0, blocking: false,
+      parryT: 0, perfectT: 0, counterT: 0, attackAnim: 0
+    }, 0.2);
+    g.restore();
+    return rosterArtCache[id] = '<img class="portrait-deco" alt="" src="' + cv.toDataURL() + '" />';
+  }
+
   function renderRoster() {
     if (!dom.rosterGrid) return;
     dom.rosterBank.textContent = S.meta.bank;
@@ -8191,7 +8762,7 @@ body.mobile .cinema-caption { font-size: 14px; }
       const active = c.id === selected;
       const price = unlocked ? (active ? '今夜的身份' : '已解锁') : ('◈ ' + c.price + ' 珍珠');
       return '<button type="button" class="roster-card' + (active ? ' selected' : '') + (unlocked ? '' : ' locked') + '" data-char="' + c.id + '">' +
-        '<span class="roster-portrait">' + (CEN.portraits[c.id] || '') + '</span>' +
+        '<span class="roster-portrait">' + rosterArt(c.id) + '</span>' +
         '<span class="roster-info">' +
         '<h3>' + c.name + '</h3>' +
         '<div class="roster-en en">' + c.en + '</div>' +
