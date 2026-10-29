@@ -2034,6 +2034,23 @@ button {
 }
 .guide-actions .move-btn { min-width: 190px; }
 
+/* brightness control (player-facing, persisted) */
+#game { transition: filter .18s ease; }
+.brightness-btn {
+  display: block;
+  margin: 14px auto 0;
+  border: 1px solid rgba(201,164,92,.28);
+  background: rgba(201,164,92,.06);
+  color: rgba(232,221,196,.78);
+  font-family: var(--serif-cn);
+  font-size: 12px;
+  letter-spacing: .12em;
+  padding: 8px 18px;
+  cursor: pointer;
+}
+.brightness-btn:hover { border-color: rgba(242,223,174,.65); color: #f2dfae; }
+body.mobile .brightness-btn { font-size: 14px; padding: 10px 22px; }
+
 /* ============================================================
    MOBILE / TOUCH LAYER
    The game stays a 16:9 canvas; menus become real-viewport
@@ -2775,7 +2792,7 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
             <article class="guide-card">
               <span class="guide-index en">I</span>
               <h3>目标</h3>
-              <p>穿过五层酒店，抵达顶楼灵堂。每层清空两波来客；顶楼只有一场舞——杀死当夜的主人，问出这场晚宴为谁而办。你在每层开始前的抉择，会决定主人是谁。</p>
+              <p>穿过五层酒店，抵达顶楼灵堂。每层清空三波来客；顶楼只有一场舞——杀死当夜的主人，问出这场晚宴为谁而办。你在每层开始前的抉择，会决定主人是谁。</p>
             </article>
             <article class="guide-card">
               <span class="guide-index en">II</span>
@@ -2785,12 +2802,12 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
             <article class="guide-card">
               <span class="guide-index en">III</span>
               <h3>战斗</h3>
-              <p><b>WASD</b> 移动，鼠标瞄准；左键帽针三连，右键掷出帽针（可穿透）。<b>Q</b> 在命中瞬间弹反，<b>SHIFT</b> 按住格挡（松开后 0.1 秒内仍判定），<b>SPACE</b> 在攻击触身瞬间闪避可触发完美闪避。三种守势都会积攒「断罪」，下一击更痛。</p>
+              <p><b>WASD</b> 移动，鼠标瞄准；左键帽针三连，右键掷出帽针（可穿透）。<b>Q</b> 在命中瞬间弹反，<b>SHIFT</b> 按住格挡（松开后 0.1 秒内仍判定），<b>SPACE</b> 在攻击触身瞬间闪避可触发完美闪避。敌人抬手时金边会亮起——那就是弹反窗口。三种守势都会积攒「断罪」，下一击更痛。</p>
             </article>
             <article class="guide-card">
               <span class="guide-index en">IV</span>
               <h3>衣帽间与珍珠</h3>
-              <p>每层清场后三选一遗物，按 <b>1 / 2 / 3</b> 或点击卡片。遗物本局永久生效；<b>3 珍珠</b>重掷，<b>5 珍珠</b>喝香槟回 35 仪态。</p>
+              <p>开局先赠一件普通遗物；每层清场后三选一遗物，按 <b>1 / 2 / 3</b> 或点击卡片。每波之间自动收下 <b>1 珍珠</b>并回复 <b>6 仪态</b>；遗物本局永久生效，<b>3 珍珠</b>重掷，<b>5 珍珠</b>喝香槟回 35 仪态。</p>
             </article>
             <article class="guide-card">
               <span class="guide-index en">V</span>
@@ -2812,7 +2829,7 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
             <button type="button" id="guide-moves" class="deco-btn ghost move-btn">招式速览 <span class="en">MOVE SHEET</span></button>
             <button type="button" id="guide-back" class="deco-btn ghost">返回标题</button>
           </div>
-          <div class="guide-foot">死亡后珍珠与遗物不保留 · 只记录最高楼层、最长夜晚与通关次数</div>
+          <div class="guide-foot">死亡后未花珍珠会存入衣帽间 · 遗物不保留 · 记录最高楼层、最长夜晚与通关次数</div>
         </div>
       </section>
 
@@ -2883,6 +2900,7 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
             <button type="button" id="resume-btn" class="deco-btn">继续 <span class="en">RESUME</span></button>
             <button type="button" id="restart-btn" class="deco-btn ghost">重新开始</button>
           </div>
+          <button type="button" id="brightness-btn" class="brightness-btn">亮度 · 112%</button>
           <div class="hint">ESC 继续</div>
         </div>
       </section>
@@ -2931,7 +2949,7 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
 
           <div class="move-col">
             <h3><span class="en">II</span> 守势</h3>
-            <div class="move-row"><kbd>Q</kbd><div><b>弹反</b><small>触身前 0.42 秒内按下；反伤 34、硬直 1.3 秒，可反射弹幕。</small></div></div>
+            <div class="move-row"><kbd>Q</kbd><div><b>弹反</b><small>触身前 0.42 秒（手机 0.52 秒）内按下；反伤 34、硬直 1.3 秒，可反射弹幕。敌人抬手金边亮起就是时机。</small></div></div>
             <div class="move-row"><kbd>SHIFT</kbd><div><b>格挡</b><small>按住减伤，消耗守势；松开后 0.1 秒内判定仍保留，守势归零会破防。</small></div></div>
             <div class="move-row"><kbd>R</kbd><div><b>谢幕</b><small>喝彩满 100 后释放：敌人减速、你伤害提高。</small></div></div>
             <div class="move-row"><kbd>1 / 2 / 3</kbd><div><b>衣帽间</b><small>三选一遗物；3 珍珠重掷，5 珍珠喝香槟。</small></div></div>
@@ -3100,7 +3118,8 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
       ],
       waves: [
         ['waiter', 'waiter', 'debutante'],
-        ['waiter', 'debutante', 'moth', 'waiter']
+        ['waiter', 'debutante', 'moth', 'waiter'],
+        ['waiter', 'moth', 'debutante', 'waiter', 'debutante']
       ]
     },
     {
@@ -3127,7 +3146,8 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
       ],
       waves: [
         ['debutante', 'valet', 'valet', 'moth'],
-        ['waiter', 'debutante', 'moth', 'waiter', 'valet']
+        ['waiter', 'debutante', 'moth', 'waiter', 'valet'],
+        ['valet', 'moth', 'debutante', 'waiter', 'valet']
       ]
     },
     {
@@ -3154,7 +3174,8 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
       ],
       waves: [
         ['steward', 'debutante', 'waiter', 'moth'],
-        ['steward', 'valet', 'debutante', 'moth', 'waiter']
+        ['steward', 'valet', 'debutante', 'moth', 'waiter'],
+        ['steward', 'bouncer', 'moth', 'valet']
       ]
     },
     {
@@ -3180,7 +3201,8 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
       ],
       waves: [
         ['bouncer', 'debutante', 'valet', 'moth'],
-        ['bouncer', 'valet', 'debutante', 'steward', 'moth', 'waiter']
+        ['bouncer', 'valet', 'debutante', 'steward', 'moth', 'waiter'],
+        ['bouncer', 'steward', 'valet', 'moth', 'bouncer']
       ]
     },
     {
@@ -5188,7 +5210,7 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
       ctx.stroke();
     }
     if (p.parryT > 0) {
-      const k = 1 - p.parryT / 0.22;
+      const k = Math.max(0, Math.min(1, 1 - p.parryT / (p.parryMax || 0.42)));
       ctx.strokeStyle = 'rgba(230,214,255,' + (0.9 - k * 0.6) + ')';
       ctx.lineWidth = 2.4;
       ctx.beginPath();
@@ -5392,6 +5414,21 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
     ctx.arc(0, 0, e.r * 2.5, 0, TAU);
     ctx.fill();
     ctx.restore();
+    // thin gold rim-light: keeps the silhouette legible in the dark
+    ctx.save();
+    ctx.strokeStyle = 'rgba(242,223,174,0.46)';
+    ctx.lineWidth = 0.9;
+    ctx.shadowColor = 'rgba(242,223,174,0.55)';
+    ctx.shadowBlur = 5;
+    ctx.beginPath();
+    ctx.arc(0, -1, e.r * 1.28, -Math.PI * 0.72, Math.PI * 0.62);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(201,164,92,0.18)';
+    ctx.beginPath();
+    ctx.arc(0, -1, e.r * 1.4, 0, TAU);
+    ctx.stroke();
+    ctx.restore();
     shadow(ctx, 0, 10, e.r * 1.35, e.r * 0.5, 0.46);
     ctx.save();
     ctx.rotate(face);
@@ -5505,12 +5542,22 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
 
     // windup tell
     if (e.state === 'windup' || e.state === 'chargeWind' || e.state === 'diveWind') {
-      const pulse = 0.4 + Math.sin(t * 20) * 0.2;
-      ctx.strokeStyle = 'rgba(201,107,117,' + pulse + ')';
-      ctx.lineWidth = 1.5;
+      const pulse = 0.55 + Math.sin(t * 20) * 0.25;
+      // gold telegraph: "when the rim burns, press Q"
+      ctx.save();
+      ctx.strokeStyle = 'rgba(242,223,174,' + pulse + ')';
+      ctx.lineWidth = 2.2;
+      ctx.shadowColor = 'rgba(242,223,174,0.75)';
+      ctx.shadowBlur = 9;
       ctx.beginPath();
-      ctx.arc(e.x, e.y, e.r * 1.3 + 9, 0, TAU);
+      ctx.arc(e.x, e.y, e.r * 1.3 + 9, -Math.PI * 0.2, Math.PI * 1.2);
       ctx.stroke();
+      ctx.strokeStyle = 'rgba(201,164,92,' + pulse * 0.5 + ')';
+      ctx.lineWidth = 0.9;
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, e.r * 1.3 + 13, 0, TAU);
+      ctx.stroke();
+      ctx.restore();
     }
   };
 
@@ -6338,6 +6385,8 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
     timer: $('timer'),
     movesBtn: $('moves-btn'),
     muteBtn: $('mute-btn'),
+    brightnessBtn: $('brightness-btn'),
+    game: $('game'),
     hpFill: $('hp-fill'),
     hpNum: $('hp-num'),
     guardFill: $('guard-fill'),
@@ -6520,6 +6569,7 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
       wins: Math.max(0, m.wins || 0),
       muted: !!m.muted,
       seenMoves: !!m.seenMoves,
+      brightness: clamp(m.brightness || 1.12, 1, 1.5),
       bank: Math.max(0, Math.floor(m.bank || 0)),
       chars: chars,
       endings: Array.from(new Set(endings))
@@ -6545,6 +6595,23 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
       '最深抵达 ' + (f ? f.numeral + ' · ' + f.name : '—') +
       ' · 胜利 ' + S.meta.wins + ' · 入场 ' + S.meta.runs +
       ' · 珍珠 ' + bank;
+  }
+
+  /* ---------------------------- brightness ---------------------------- */
+  function applyBrightness() {
+    const b = (S.meta && S.meta.brightness) || 1.12;
+    if (dom.game) dom.game.style.filter = 'brightness(' + b + ')';
+    if (dom.brightnessBtn) dom.brightnessBtn.textContent = '亮度 · ' + Math.round(b * 100) + '%';
+  }
+
+  function cycleBrightness() {
+    if (!S.meta) return;
+    const steps = [1.12, 1.25, 1.4, 1.0];
+    const i = steps.indexOf(S.meta.brightness);
+    S.meta.brightness = steps[(i + 1) % steps.length];
+    applyBrightness();
+    saveMeta();
+    audio('click');
   }
 
   /* ---------------------------- helpers ---------------------------- */
@@ -6838,7 +6905,7 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
       walkT: 0, dead: false,
       guard: 100, guardMax: 100, guardRegen: 0, guardBroken: 0,
       blocking: false, blockT: 0, blockHeld: false, blockRelease: 0, blockFlash: 0,
-      parryT: 0, parryCd: 0, parryFlash: 0, parryReadyFlash: 0,
+      parryT: 0, parryMax: 0.42, parryCd: 0, parryFlash: 0, parryReadyFlash: 0,
       dodgeWindow: 0, perfectT: 0, afterimageT: 0,
       counterT: 0, counterKind: '', defenseGlow: 0
     }, baseStats());
@@ -6970,8 +7037,19 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
     S.telegraphs = [];
     S.pools = [];
     S.rewardChoices = [];
+    S.rule = null;
+    S.starterRelic = null;
     S.player = makePlayer();
     S.player.hp = S.player.maxHp;
+    // 开局赠礼：先给一件普通遗物，让 build 从第一层就开始长
+    const starterPool = D.RELICS.filter((r) => r.rarity === 1);
+    if (starterPool.length) {
+      const starter = pick(starterPool);
+      S.relics.push(starter);
+      S.starterRelic = starter;
+      rebuildStats();
+      S.player.hp = S.player.maxHp;
+    }
     S.meta.runs += 1;
     saveMeta();
     renderTitleMeta();
@@ -6993,6 +7071,10 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
     S.mode = 'playing';
     hideScreens();
     syncHud();
+    if (S.starterRelic) {
+      toast('开局赠礼 · ' + S.starterRelic.name + ' 已别在衣襟上', 2200);
+      S.starterRelic = null;
+    }
     try { CEN.Audio.setBattle(true); } catch (e) { /* ignore */ }
     S.enemies = [];
     S.bullets = [];
@@ -7397,7 +7479,8 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
       return;
     }
     p.guard -= 8;
-    p.parryT = 0.42;
+    p.parryMax = IS_MOBILE ? 0.52 : 0.42;
+    p.parryT = p.parryMax;
     p.parryCd = 0.55;
     p.blocking = false;
     p.attackAnim = 0.35;
@@ -8788,6 +8871,17 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
   }
 
   /* ---------------------------- waves / floor update ---------------------------- */
+  function waveInterlude() {
+    const p = S.player;
+    if (!p) return;
+    S.pearls += 1;
+    S.applause = Math.min(100, S.applause + 6);
+    p.hp = Math.min(p.maxHp, p.hp + 6);
+    toast('间奏 · 珍珠 +1 · 仪态 +6', 1500);
+    addBurst(p.x, p.y, P.goldHi, 10);
+    audio('pickup');
+  }
+
   function updateWaves(dt) {
     if (S.mode !== 'playing' || !S.floor) return;
     if (S.floor.boss) {
@@ -8803,6 +8897,7 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
         if (S.spawnDelay <= 0) {
           spawnWave(S.waveIndex);
           S.waveIndex += 1;
+          if (S.waveIndex > 1) waveInterlude();
           S.spawnDelay = 1.6;
         }
       } else {
@@ -9294,6 +9389,7 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
     dom.rerollBtn.addEventListener('click', rerollReward);
     dom.healBtn.addEventListener('click', buyHeal);
     dom.muteBtn.addEventListener('click', toggleMute);
+    if (dom.brightnessBtn) dom.brightnessBtn.addEventListener('click', cycleBrightness);
 
     document.addEventListener('visibilitychange', () => {
       if (document.hidden && S.mode === 'playing' && !S.moveSheetOpen) pause();
@@ -9428,6 +9524,7 @@ body.mobile .victory-ending .ending-name { font-size: 18px; }
     }
     dom.muteBtn.textContent = S.meta.muted ? '∅' : '♪';
     dom.muteBtn.style.opacity = S.meta.muted ? '0.45' : '1';
+    applyBrightness();
     makeGrain();
     S.floor = D.FLOORS[0];
     buildBackdrop();
