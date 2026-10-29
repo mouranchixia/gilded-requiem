@@ -1874,6 +1874,166 @@ button {
   100% { opacity: 0; }
 }
 
+/* ================= MOVE SHEET ================= */
+.moves-icon {
+  width: auto;
+  min-width: 43px;
+  padding: 0 8px;
+  font-family: var(--serif-cn);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+}
+.move-sheet {
+  position: absolute;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 26px;
+  background:
+    radial-gradient(circle at 50% 46%, rgba(76, 28, 36, 0.28), transparent 52%),
+    rgba(4, 3, 6, 0.84);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.22s ease, visibility 0.22s ease;
+}
+.move-sheet.on { opacity: 1; visibility: visible; pointer-events: auto; }
+.move-panel {
+  position: relative;
+  width: 820px;
+  max-width: calc(100% - 28px);
+  max-height: calc(100% - 28px);
+  overflow: auto;
+  padding: 30px 40px 24px;
+  text-align: center;
+  background:
+    linear-gradient(160deg, rgba(30, 21, 28, 0.985), rgba(9, 7, 11, 0.995));
+  border: 1px solid rgba(201, 164, 92, 0.44);
+  box-shadow:
+    0 34px 100px rgba(0, 0, 0, 0.76),
+    inset 0 0 0 7px rgba(201, 164, 92, 0.035),
+    inset 0 0 80px rgba(126, 39, 51, 0.08);
+}
+.move-panel::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border: 1px solid rgba(201, 164, 92, 0.12);
+  pointer-events: none;
+}
+.move-close {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  z-index: 2;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(201, 164, 92, 0.24);
+  background: rgba(8, 6, 10, 0.5);
+  color: var(--gold);
+  font-family: var(--serif-en);
+  font-size: 20px;
+  line-height: 24px;
+  cursor: pointer;
+}
+.move-close:hover { background: rgba(201, 164, 92, 0.13); color: var(--ivory); }
+.move-kicker {
+  position: relative;
+  color: var(--gold);
+  font-size: 9px;
+  letter-spacing: 0.3em;
+}
+.move-panel h2 {
+  position: relative;
+  margin: 9px 0 2px;
+  font-family: var(--serif-cn);
+  font-size: 38px;
+  font-weight: 400;
+  letter-spacing: 0.24em;
+  color: var(--ivory);
+}
+.move-sub {
+  color: var(--muted);
+  font-size: 9px;
+  letter-spacing: 0.28em;
+}
+.move-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin: 20px 0 12px;
+  text-align: left;
+}
+.move-col h3 {
+  margin: 0 0 6px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid rgba(201, 164, 92, 0.26);
+  color: var(--gold-hi);
+  font-family: var(--serif-cn);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+}
+.move-col h3 .en { color: var(--gold); font-size: 8px; margin-right: 8px; }
+.move-row {
+  display: grid;
+  grid-template-columns: 74px 1fr;
+  gap: 11px;
+  align-items: start;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(150, 137, 121, 0.11);
+}
+.move-row:last-child { border-bottom: 0; }
+.move-row kbd {
+  display: inline-block;
+  padding: 4px 5px;
+  border: 1px solid rgba(201, 164, 92, 0.3);
+  background: rgba(201, 164, 92, 0.055);
+  color: var(--gold-hi);
+  font-family: var(--serif-en);
+  font-size: 10px;
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+  text-align: center;
+  white-space: nowrap;
+}
+.move-row b {
+  display: block;
+  color: var(--ivory);
+  font-family: var(--serif-cn);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+}
+.move-row small {
+  display: block;
+  margin-top: 2px;
+  color: rgba(190, 177, 155, 0.78);
+  font-size: 10px;
+  line-height: 1.55;
+  letter-spacing: 0.025em;
+}
+.move-row small b { display: inline; font-size: 10px; color: var(--gold-hi); }
+.move-note {
+  margin: 0 auto 16px;
+  max-width: 690px;
+  color: rgba(190, 177, 155, 0.78);
+  font-size: 10px;
+  line-height: 1.75;
+  letter-spacing: 0.03em;
+}
+.move-note b { color: var(--gold-hi); font-weight: 400; }
+.move-panel .deco-btn {
+  min-width: 260px;
+  padding: 11px 24px;
+  font-size: 12px;
+}
+.guide-actions .move-btn { min-width: 190px; }
+
 </style>
 </head>
 <body class="title-mode">
@@ -1911,6 +2071,7 @@ button {
         <div class="hud-right">
           <div class="hud-stat pearls"><span class="stat-icon">◈</span><span id="pearl-count">0</span></div>
           <div class="hud-stat" id="timer">00:00</div>
+          <button type="button" id="moves-btn" class="icon-btn moves-icon" title="招式速览 (H)" aria-label="招式速览">招式</button>
           <button type="button" id="mute-btn" class="icon-btn" title="静音 (M)">♪</button>
         </div>
       </div>
@@ -2224,6 +2385,7 @@ button {
           </div>
           <div class="guide-actions">
             <button type="button" id="guide-start" class="deco-btn">挑选今晚的身份 <span class="en">CHOOSE YOUR GUISE</span></button>
+            <button type="button" id="guide-moves" class="deco-btn ghost move-btn">招式速览 <span class="en">MOVE SHEET</span></button>
             <button type="button" id="guide-back" class="deco-btn ghost">返回标题</button>
           </div>
           <div class="guide-foot">死亡后珍珠与遗物不保留 · 只记录最高楼层、最长夜晚与通关次数</div>
@@ -2324,6 +2486,37 @@ button {
           <div class="hint">R 重新开始</div>
         </div>
       </section>
+    </div>
+
+    <!-- ================= MOVE SHEET (independent overlay) ================= -->
+    <div id="move-sheet" class="move-sheet" aria-hidden="true">
+      <div class="move-panel" role="dialog" aria-modal="true" aria-labelledby="move-title">
+        <button type="button" id="moves-close" class="move-close" aria-label="关闭招式速览">×</button>
+        <div class="move-kicker en">THE HOUSE RULES · BEFORE THE WAKE</div>
+        <h2 id="move-title">招式速览</h2>
+        <div class="move-sub en">A SMALL GUIDE TO STAYING ALIVE</div>
+
+        <div class="move-cols">
+          <div class="move-col">
+            <h3><span class="en">I</span> 身法</h3>
+            <div class="move-row"><kbd>WASD</kbd><div><b>移动</b><small>避开舞池中央的杀意。</small></div></div>
+            <div class="move-row"><kbd>鼠标</kbd><div><b>瞄准</b><small>左键帽针三连 · 右键掷出帽针（可穿透）。</small></div></div>
+            <div class="move-row"><kbd>SPACE</kbd><div><b>闪避</b><small>攻击触身瞬间闪避 → 完美闪避：慢动作 + 喝彩。</small></div></div>
+            <div class="move-row"><kbd>ESC</kbd><div><b>暂停</b><small>乐队停下，但蜡烛还在烧。</small></div></div>
+          </div>
+
+          <div class="move-col">
+            <h3><span class="en">II</span> 守势</h3>
+            <div class="move-row"><kbd>Q</kbd><div><b>弹反</b><small>触身前 0.22 秒按下；反伤 34、硬直 1.3 秒，可反射弹幕。</small></div></div>
+            <div class="move-row"><kbd>SHIFT</kbd><div><b>格挡</b><small>按住减伤，消耗守势；守势归零会破防。</small></div></div>
+            <div class="move-row"><kbd>R</kbd><div><b>谢幕</b><small>喝彩满 100 后释放：敌人减速、你伤害提高。</small></div></div>
+            <div class="move-row"><kbd>1 / 2 / 3</kbd><div><b>衣帽间</b><small>三选一遗物；3 珍珠重掷，5 珍珠喝香槟。</small></div></div>
+          </div>
+        </div>
+
+        <p class="move-note">三种守势都会积攒 <b>「断罪」</b>：攒满后下一击更痛。右上角 <b>「招式」</b> 或按 <b>H</b> 可随时打开；在关内查看时，战斗会暂停。</p>
+        <button type="button" id="moves-ok" class="deco-btn">记住了 <span class="en">ENTER THE WAKE</span></button>
+      </div>
     </div>
 
     <div id="toast" class="toast"></div>
@@ -5652,6 +5845,7 @@ button {
     bossCn: $('boss-cn'),
     pearlCount: $('pearl-count'),
     timer: $('timer'),
+    movesBtn: $('moves-btn'),
     muteBtn: $('mute-btn'),
     hpFill: $('hp-fill'),
     hpNum: $('hp-num'),
@@ -5680,7 +5874,11 @@ button {
     },
     startBtn: $('start-btn'),
     guideStart: $('guide-start'),
+    guideMoves: $('guide-moves'),
     guideBack: $('guide-back'),
+    moveSheet: $('move-sheet'),
+    movesClose: $('moves-close'),
+    movesOk: $('moves-ok'),
     rosterGrid: $('roster-grid'),
     rosterBank: $('roster-bank'),
     rosterCount: $('roster-count'),
@@ -5766,6 +5964,7 @@ button {
     mouse: { x: 640, y: 360, left: false, right: false },
     keys: {},
     meta: null,
+    moveSheetOpen: false,
     bg: null,
     grain: null,
     toastTimer: null,
@@ -5801,6 +6000,7 @@ button {
       runs: Math.max(0, m.runs || 0),
       wins: Math.max(0, m.wins || 0),
       muted: !!m.muted,
+      seenMoves: !!m.seenMoves,
       bank: Math.max(0, Math.floor(m.bank || 0)),
       chars: chars,
       endings: Array.from(new Set(endings))
@@ -5878,6 +6078,36 @@ button {
     document.body.classList.remove('title-mode');
     Object.keys(dom.screens).forEach((k) => dom.screens[k].classList.remove('active'));
     fitUI();
+  }
+
+  /* ---------------------------- move sheet ---------------------------- */
+  function markMovesSeen() {
+    if (S.meta.seenMoves) return;
+    S.meta.seenMoves = true;
+    saveMeta();
+  }
+
+  function openMoveSheet() {
+    if (S.moveSheetOpen) return;
+    S.moveSheetOpen = true;
+    S.keys = {};
+    S.mouse.left = false;
+    S.mouse.right = false;
+    endBlock();
+    dom.moveSheet.classList.add('on');
+    dom.moveSheet.setAttribute('aria-hidden', 'false');
+    S.last = performance.now();
+    audio('click');
+  }
+
+  function closeMoveSheet() {
+    if (!S.moveSheetOpen) return;
+    S.moveSheetOpen = false;
+    dom.moveSheet.classList.remove('on');
+    dom.moveSheet.setAttribute('aria-hidden', 'true');
+    S.last = performance.now();
+    markMovesSeen();
+    audio('click');
   }
 
   /* ---------------------------- roster / story ---------------------------- */
@@ -8250,10 +8480,10 @@ button {
     realDt = Math.min(0.05, realDt);
     S.t += realDt;
 
-    if (S.mode === 'intro') {
+    if (!S.moveSheetOpen && S.mode === 'intro') {
       S.introT -= realDt;
       if (S.introT <= 0) beginFloor();
-    } else if (S.mode === 'playing' || S.mode === 'bossDying' || S.mode === 'collecting') {
+    } else if (!S.moveSheetOpen && (S.mode === 'playing' || S.mode === 'bossDying' || S.mode === 'collecting')) {
       if (S.slowmo > 0) {
         S.slowmo = Math.max(0, S.slowmo - realDt);
         update(realDt * 0.35);
@@ -8299,6 +8529,18 @@ button {
       const k = e.key.toLowerCase();
       if (k === ' ' || k === 'arrowup' || k === 'arrowdown' || k === 'arrowleft' || k === 'arrowright') {
         e.preventDefault();
+      }
+      if (S.moveSheetOpen) {
+        if (k === 'escape' || k === 'h') {
+          e.preventDefault();
+          closeMoveSheet();
+        }
+        return;
+      }
+      if (k === 'h') {
+        e.preventDefault();
+        openMoveSheet();
+        return;
       }
       if (S.mode === 'dead' || S.mode === 'victory') {
         if (k === 'r') restart();
@@ -8386,6 +8628,35 @@ button {
       S.mode = 'guide';
       showOnly('guide');
       audio('click');
+      if (!S.meta.seenMoves) openMoveSheet();
+    });
+
+    dom.guideMoves.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openMoveSheet();
+    });
+
+    dom.movesBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openMoveSheet();
+    });
+
+    dom.movesClose.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeMoveSheet();
+    });
+
+    dom.movesOk.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeMoveSheet();
+    });
+
+    dom.moveSheet.addEventListener('click', (e) => {
+      if (e.target === dom.moveSheet) closeMoveSheet();
     });
 
     dom.guideStart.addEventListener('click', (e) => {
@@ -8432,7 +8703,7 @@ button {
     dom.muteBtn.addEventListener('click', toggleMute);
 
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden && S.mode === 'playing') pause();
+      if (document.hidden && S.mode === 'playing' && !S.moveSheetOpen) pause();
     });
   }
 
