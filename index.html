@@ -5442,6 +5442,25 @@ body.mobile .cinema-caption { font-size: 14px; }
     }
     ctx.restore();
 
+    // anime-gothic cast art (loaded after this file)
+    if (CEN.playerArt && CEN.playerArt[p.charId]) {
+      const ACC = { lady: '#c9a45c', count: '#8fb8c8', valet: '#5fbfb0', diva: '#6fbf8f', watchman: '#c06060', tailor: '#d8a0a8' };
+      ctx.save();
+      ctx.globalAlpha = 0.34;
+      ctx.fillStyle = ACC[p.charId] || '#c9a45c';
+      ctx.beginPath();
+      ctx.ellipse(p.x, p.y + 20, 19, 6, 0, 0, TAU);
+      ctx.fill();
+      ctx.restore();
+      ctx.save();
+      ctx.shadowColor = 'rgba(201,164,92,0.7)';
+      ctx.shadowBlur = 10;
+      CEN.playerArt[p.charId](ctx, p, t);
+      ctx.restore();
+      ctx.restore();
+      return;
+    }
+
     ctx.save();
     ctx.translate(p.x, p.y + bob);
     ctx.rotate(p.aim);
@@ -5630,10 +5649,12 @@ body.mobile .cinema-caption { font-size: 14px; }
     ctx.restore();
     shadow(ctx, 0, 10, e.r * 1.35, e.r * 0.5, 0.46);
     ctx.save();
-    ctx.rotate(face);
-    ctx.scale(1.26, 1.26);
+    const enemyDir = Math.cos(face) >= 0 ? 1 : -1;
+    ctx.rotate(-Math.PI / 2);
+    ctx.scale(1.7 * enemyDir, 1.7);
 
     // horror layer: twitching black tendrils, stitched grin, fever eyes
+    if (!CEN.enemyArt) {
     const twitch = Math.sin(t * 37 + e.x * 0.7) * 0.7;
     ctx.save();
     ctx.translate(twitch, Math.cos(t * 29 + e.y) * 0.6);
@@ -5656,19 +5677,36 @@ body.mobile .cinema-caption { font-size: 14px; }
       ctx.fill();
     }
     ctx.restore();
+    }
 
-    switch (e.type) {
-      case 'waiter': drawWaiter(ctx, e, t); break;
-      case 'debutante': drawDebutante(ctx, e, t); break;
-      case 'moth': drawMoth(ctx, e, t); break;
-      case 'valet': drawValet(ctx, e, t); break;
-      case 'steward': drawSteward(ctx, e, t); break;
-      case 'bouncer': drawBouncer(ctx, e, t); break;
-      default: break;
+    if (CEN.enemyArt && CEN.enemyArt[e.type]) {
+      const EACC = { waiter: '#c9a45c', debutante: '#6fbf8f', moth: '#9b7fc0', valet: '#5fbfb0', steward: '#8fbf78', bouncer: '#c06060' };
+      ctx.save();
+      ctx.globalAlpha = 0.3;
+      ctx.fillStyle = EACC[e.type] || '#c06060';
+      ctx.beginPath();
+      ctx.ellipse(e.x, e.y + 18, 18, 5.5, 0, 0, TAU);
+      ctx.fill();
+      ctx.restore();
+      ctx.save();
+      ctx.shadowColor = 'rgba(255,70,90,0.55)';
+      ctx.shadowBlur = 9;
+      CEN.enemyArt[e.type](ctx, e, t);
+      ctx.restore();
+    } else {
+      switch (e.type) {
+        case 'waiter': drawWaiter(ctx, e, t); break;
+        case 'debutante': drawDebutante(ctx, e, t); break;
+        case 'moth': drawMoth(ctx, e, t); break;
+        case 'valet': drawValet(ctx, e, t); break;
+        case 'steward': drawSteward(ctx, e, t); break;
+        case 'bouncer': drawBouncer(ctx, e, t); break;
+        default: break;
+      }
     }
 
     // feverish eyes and surgical stitches, readable even in silhouette
-    if (e.hp > 0) {
+    if (e.hp > 0 && !CEN.enemyArt) {
       ctx.save();
       ctx.globalCompositeOperation = 'lighter';
       const gl = 0.5 + Math.sin(t * 13 + e.y) * 0.25;
@@ -6512,6 +6550,692 @@ body.mobile .cinema-caption { font-size: 14px; }
   };
 
   D.hexA = rgba;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+/* ============================================================
+   GILDED REQUIEM — cast art
+   Anime-gothic in-game silhouettes for six guests and six enemies.
+   Loaded after sprites.js; overrides only the character/enemy bodies.
+   ============================================================ */
+(function (global) {
+  'use strict';
+  const CEN = global.CEN;
+  if (!CEN || !CEN.draw || !CEN.data) return;
+  const D = CEN.draw;
+  const P = CEN.data.P;
+  const TAU = Math.PI * 2;
+
+  const C = {
+    ink: '#08060a',
+    ink2: '#121018',
+    ivory: '#eadfca',
+    skin: '#e8d9c6',
+    skinShade: '#cdb9a3',
+    gold: '#c9a45c',
+    goldHi: '#f2dfae',
+    silver: '#cbd6dc',
+    silverHi: '#eef6f8',
+    wine: '#7e2733',
+    wineHi: '#c96b75',
+    green: '#3f7f6b',
+    absinthe: '#a6dda8',
+    teal: '#8fd0d8',
+    rose: '#d78a9a'
+  };
+
+  function el(ctx, x, y, rx, ry, fill, stroke, lw, rot) {
+    ctx.beginPath();
+    ctx.ellipse(x, y, Math.max(0.1, rx), Math.max(0.1, ry), rot || 0, 0, TAU);
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw == null ? 0.9 : lw; ctx.stroke(); }
+  }
+
+  function ln(ctx, x1, y1, x2, y2, color, lw, dash) {
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lw == null ? 1 : lw;
+    ctx.lineCap = 'round';
+    if (dash) ctx.setLineDash(dash);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function poly(ctx, pts, fill, stroke, lw) {
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+    ctx.closePath();
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw == null ? 0.9 : lw; ctx.stroke(); }
+  }
+
+  function curve(ctx, pts, fill, stroke, lw) {
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length - 1; i += 2) {
+      ctx.quadraticCurveTo(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1]);
+    }
+    ctx.closePath();
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw == null ? 0.9 : lw; ctx.stroke(); }
+  }
+
+  function eye(ctx, x, y, iris, open, lash) {
+    const o = open == null ? 1 : open;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(-0.16);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 3.75, 2.3 * o, 0, 0, TAU);
+    ctx.fillStyle = '#fffaf0';
+    ctx.fill();
+    ctx.strokeStyle = lash || C.ink;
+    ctx.lineWidth = 1.15;
+    ctx.stroke();
+    if (o > 0.25) {
+      ctx.beginPath();
+      ctx.ellipse(0.55, 0, 1.85, 2.0 * o, 0, 0, TAU);
+      ctx.fillStyle = iris;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(0.75, 0, 0.8, 1.65 * o, 0, 0, TAU);
+      ctx.fillStyle = C.ink;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(-0.25, -0.8, 0.55, 0, TAU);
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.fill();
+    }
+    ctx.beginPath();
+    ctx.moveTo(-2.9, -1.55 * o);
+    ctx.quadraticCurveTo(0, -2.75 * o, 3.0, -1.35 * o);
+    ctx.strokeStyle = lash || C.ink;
+    ctx.lineWidth = 1.15;
+    ctx.stroke();
+    // upper lash
+    ctx.beginPath();
+    ctx.moveTo(-2.9, -1.55 * o);
+    ctx.lineTo(-3.9, -2.3 * o);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function face(ctx, x, y, opts) {
+    const o = opts || {};
+    const hair = o.hair || C.ink;
+    const skin = o.skin || C.skin;
+    // hair mass behind
+    ctx.beginPath();
+    ctx.arc(x - 2.2, y, 8.8, 0, TAU);
+    ctx.fillStyle = hair;
+    ctx.fill();
+    // jaw / cheek
+    ctx.beginPath();
+    ctx.ellipse(x + 1.4, y + 0.2, 6.5, 6.35, 0.03, 0, TAU);
+    ctx.fillStyle = skin;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(201,164,92,0.45)';
+    ctx.lineWidth = 0.65;
+    ctx.stroke();
+    // warm cheek
+    if (o.blush) {
+      ctx.beginPath();
+      ctx.ellipse(x + 3.4, y + 3.0, 2.0, 1.15, 0.25, 0, TAU);
+      ctx.fillStyle = 'rgba(215,138,154,0.28)';
+      ctx.fill();
+    }
+    // hair fringe — only the top of the forehead
+    ctx.beginPath();
+    ctx.ellipse(x + 0.2, y - 4.2, 6.7, 2.35, -0.16, 0, TAU);
+    ctx.fillStyle = hair;
+    ctx.fill();
+    // long side lock / ear
+    ctx.beginPath();
+    ctx.moveTo(x - 4.0, y - 5.4);
+    ctx.quadraticCurveTo(x - 8.2, y + 0.5, x - 6.3, y + 7.0);
+    ctx.quadraticCurveTo(x - 3.2, y + 4.4, x - 2.4, y - 1);
+    ctx.fillStyle = hair;
+    ctx.fill();
+    // gold rim-light along the hair
+    ctx.beginPath();
+    ctx.arc(x - 2.2, y, 8.9, -1.35, -1.0);
+    ctx.strokeStyle = 'rgba(242,223,174,0.42)';
+    ctx.lineWidth = 0.7;
+    ctx.stroke();
+    // eyes / brows
+    eye(ctx, x + 2.55, y - 1.75, o.eye || C.goldHi, o.open == null ? 1 : o.open, o.lash);
+    if (o.twoEyes !== false) {
+      eye(ctx, x + 2.55, y + 1.75, o.eye || C.goldHi, o.open == null ? 1 : o.open, o.lash);
+    }
+    ctx.strokeStyle = 'rgba(80,50,50,0.55)';
+    ctx.lineWidth = 0.55;
+    ctx.beginPath();
+    ctx.moveTo(x + 1.2, y - 3.9);
+    ctx.quadraticCurveTo(x + 2.5, y - 4.4, x + 3.9, y - 3.8);
+    ctx.stroke();
+    // small nose
+    ctx.strokeStyle = 'rgba(120,80,70,0.45)';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(x + 5.55, y - 0.3);
+    ctx.quadraticCurveTo(x + 6.0, y + 0.25, x + 5.5, y + 0.6);
+    ctx.stroke();
+    // mouth
+    ctx.strokeStyle = o.lip || C.wine;
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(x + 5.35, y - 0.15);
+    ctx.quadraticCurveTo(x + 6.1, y + 0.45, x + 5.25, y + 0.9);
+    ctx.stroke();
+    if (o.fang) {
+      poly(ctx, [[x + 5.15, y + 0.15], [x + 5.45, y + 0.1], [x + 5.3, y + 1.1]], C.ivory);
+    }
+    // earring
+    ctx.beginPath();
+    ctx.arc(x - 3.5, y + 4.3, 0.75, 0, TAU);
+    ctx.fillStyle = C.goldHi;
+    ctx.fill();
+    return { x: x + 7, y: y };
+  }
+
+  function rose(ctx, x, y, r, color) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.fillStyle = color || C.wine;
+    for (let i = 0; i < 5; i++) {
+      const a = i / 5 * TAU;
+      ctx.beginPath();
+      ctx.ellipse(Math.cos(a) * r * 0.42, Math.sin(a) * r * 0.42, r * 0.62, r * 0.36, a, 0, TAU);
+      ctx.fill();
+    }
+    ctx.beginPath();
+    ctx.arc(0, 0, r * 0.3, 0, TAU);
+    ctx.fillStyle = 'rgba(255,235,220,0.35)';
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function bow(ctx, x, y, s, color) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.fillStyle = color || C.wine;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-s, -s * 0.55); ctx.lineTo(-s * 0.8, s * 0.55); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(s, -s * 0.55); ctx.lineTo(s * 0.8, s * 0.55); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 0, s * 0.22, 0, TAU); ctx.fillStyle = C.goldHi; ctx.fill();
+    ctx.restore();
+  }
+
+  function diamond(ctx, x, y, s, fill, stroke) {
+    poly(ctx, [[x, y - s], [x + s * 0.65, y], [x, y + s], [x - s * 0.65, y]], fill, stroke, 0.7);
+  }
+
+  function sigilMark(ctx, p, color, sigil) {
+    ctx.save();
+    ctx.globalAlpha = 0.62;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    ctx.ellipse(p.x, p.y + 13, 21, 7.5, 0, 0, TAU);
+    ctx.stroke();
+    ctx.globalAlpha = 0.55;
+    ctx.strokeStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(p.x, p.y + 13, 15, 5, 0, 0, TAU);
+    ctx.stroke();
+    ctx.globalAlpha = 0.78;
+    ctx.fillStyle = color;
+    ctx.font = '11px "Songti SC","STSong",serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(sigil || '✦', p.x, p.y - 29);
+    ctx.restore();
+  }
+
+  function beginP(ctx, p, t, scale) {
+    const bob = Math.sin(t * 7 + p.x * 0.02) * 1.2;
+    const dir = Math.cos(p.aim) >= 0 ? 1 : -1;
+    ctx.save();
+    ctx.translate(p.x, p.y + bob);
+    // The art is composed facing +x. Turn it upright for a 3/4 standing
+    // silhouette, then mirror it toward the aim direction.
+    ctx.rotate(-Math.PI / 2);
+    ctx.scale((scale || 1.55) * dir, scale || 1.55);
+    return () => ctx.restore();
+  }
+
+  /* ============================ guests ============================ */
+
+  function drawLady(ctx, p, t) {
+    const done = beginP(ctx, p, t, 1.95);
+    const atk = p.attackAnim || 0;
+    const sway = Math.sin(t * 5.2) * 1.8;
+    // train
+    curve(ctx, [[-5, -7], [-20, -20], [-39, -8 + sway], [-29, 7], [-9, 8]], 'rgba(24,17,30,0.96)', 'rgba(201,164,92,0.55)', 1);
+    // skirt
+    el(ctx, -2, 1, 13.5, 10.5, '#2b1b38', 'rgba(201,164,92,0.65)', 1);
+    for (let i = 0; i < 4; i++) {
+      ln(ctx, -11, -5 + i * 3.2, 2, -8 + i * 3.6, 'rgba(201,164,92,0.22)', 0.7);
+    }
+    // bodice
+    el(ctx, 2.8, 0, 7, 8, '#3b274c', 'rgba(201,164,92,0.55)', 0.9);
+    for (let i = 0; i < 3; i++) el(ctx, 1.2 + i * 2.2, 0, 0.9, 0.9, 'rgba(242,223,174,0.55)');
+    // arms
+    ln(ctx, 4, -6, 12, -8, C.skin, 1.7);
+    ln(ctx, 4, 6, 13, 4, C.skin, 1.7);
+    // wide hat brim
+    el(ctx, 5.5, 0, 13, 8, '#2a1b34', 'rgba(201,164,92,0.75)', 0.9);
+    el(ctx, 5.5, 0, 11, 6.2, 'rgba(8,6,10,0.5)');
+    // veil
+    ctx.save();
+    ctx.globalAlpha = 0.35;
+    curve(ctx, [[3, -7], [-10, -12], [-19, -5], [-9, 4], [2, 6]], 'rgba(214,200,184,0.4)', 'rgba(242,223,174,0.35)', 0.6);
+    ctx.restore();
+    // hat crown (behind the face)
+    el(ctx, 2.8, -0.5, 7.4, 5.2, '#0d0a10', 'rgba(201,164,92,0.8)', 0.9);
+    el(ctx, 2.8, -0.5, 5.9, 3.6, '#1b1420');
+    // face
+    face(ctx, 10.4, 0, { hair: '#07060a', eye: C.goldHi, blush: true, lip: '#a94b5d' });
+    // feather
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath();
+      ctx.moveTo(3, -4);
+      ctx.quadraticCurveTo(-4 - i, -14 - i * 3, -10 - i * 3, -20 - i * 2);
+      ctx.strokeStyle = 'rgba(242,223,174,0.5)';
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+    }
+    // hatpin rapier
+    ln(ctx, 12, 4, 29 + atk * 9, 2.4 - atk * 1.5, C.silverHi, 1.35);
+    ln(ctx, 12, 4, 17, 3.6, C.gold, 2);
+    rose(ctx, 12, 4, 2.2, C.wine);
+    done();
+    sigilMark(ctx, p, p.accent || C.gold, '✦');
+  }
+
+  function drawCount(ctx, p, t) {
+    const done = beginP(ctx, p, t, 2.0);
+    const atk = p.attackAnim || 0;
+    // long coat tails
+    poly(ctx, [[-3, -8], [-30, -15], [-36, 2], [-22, 8], [-2, 7]], '#1a2732', 'rgba(203,214,220,0.55)', 0.9);
+    poly(ctx, [[-6, -6], [-22, -5], [-24, 3], [-8, 6]], 'rgba(201,164,92,0.16)');
+    // torso / shoulders
+    poly(ctx, [[-8, -12], [5, -10], [10, -4], [10, 5], [4, 11], [-9, 9]], '#23333e', 'rgba(201,164,92,0.35)', 0.8);
+    // shirt + cravat
+    poly(ctx, [[2, -7], [10, -4], [10, 4], [2, 7]], '#d8cdbb');
+    poly(ctx, [[3, -3], [8, 0], [3, 3], [1, 0]], C.ivory, C.gold, 0.6);
+    // arms
+    ln(ctx, 3, -9, 13, -11, C.skin, 1.8);
+    ln(ctx, 4, 8, 14, 8, C.skin, 1.8);
+    // high collar
+    poly(ctx, [[3, -9], [6, -12], [7, -7], [5, -5]], '#090b0e', C.gold, 0.5);
+    // top hat (behind the face)
+    el(ctx, 2.6, 0, 10, 6.3, '#14202a', 'rgba(242,223,174,0.65)', 0.9);
+    el(ctx, 2.6, 0, 7.4, 4.6, '#11151a');
+    el(ctx, 2.6, 0, 3.6, 2.4, '#0a0c0f', 'rgba(201,164,92,0.5)', 0.5);
+    // face
+    face(ctx, 10.6, 0, { hair: '#b9c3c9', eye: C.silverHi, lip: '#6f4b54', fang: true });
+    // monocle
+    ctx.beginPath(); ctx.arc(13.2, 1.4, 2.3, 0, TAU);
+    ctx.strokeStyle = 'rgba(242,223,174,0.75)'; ctx.lineWidth = 0.7; ctx.stroke();
+    ln(ctx, 12.8, 3, 16, 6.5, 'rgba(242,223,174,0.35)', 0.5);
+    // cane
+    ln(ctx, 10, 5, 31 + atk * 8, 7 - atk * 2, '#1a1410', 2.3);
+    ln(ctx, 30 + atk * 8, 7 - atk * 2, 30 + atk * 8, 2.5 - atk * 2, C.silverHi, 1.2);
+    el(ctx, 30 + atk * 8, 2.5 - atk * 2, 1.9, 1.9, C.silverHi, C.gold, 0.5);
+    done();
+    sigilMark(ctx, p, p.accent || C.silver, '♜');
+  }
+
+  function drawValet(ctx, p, t) {
+    const done = beginP(ctx, p, t, 1.9);
+    const atk = p.attackAnim || 0;
+    const sh = Math.sin(t * 4) * 1.5;
+    // shard halo
+    for (let i = -1; i <= 1; i++) {
+      diamond(ctx, -14 + i * 7, -15 - i * 2 + sh, 3.4, 'rgba(143,208,216,0.28)', 'rgba(203,214,220,0.7)');
+    }
+    // tailcoat
+    poly(ctx, [[-4, -7], [-26, -11], [-30, 2], [-16, 7], [-2, 6]], '#12303a', 'rgba(143,208,216,0.5)', 0.9);
+    el(ctx, 0, 0, 9, 9.5, '#1b3a44', 'rgba(203,214,220,0.32)', 0.8);
+    // shirt
+    poly(ctx, [[2, -6], [10, -3], [10, 3], [2, 6]], 'rgba(232,221,196,0.75)');
+    // arms + daggers
+    ln(ctx, 4, -7, 12, -11, C.skin, 1.4);
+    ln(ctx, 4, 7, 13, 10, C.skin, 1.4);
+    ln(ctx, 12, -11, 28 + atk * 8, -14 - atk * 2, C.silverHi, 1.2);
+    ln(ctx, 13, 10, 28 + atk * 8, 13 + atk * 2, C.silverHi, 1.2);
+    // mirror face
+    face(ctx, 10.2, 0, { hair: '#d5dde0', eye: C.teal, lip: '#6b4c5b', twoEyes: true });
+    poly(ctx, [[12.4, -5], [17.2, -2], [15.0, 5.2], [11.4, 3]], 'rgba(203,232,238,0.34)', 'rgba(238,246,248,0.85)', 0.7);
+    ln(ctx, 12.7, -3.4, 15.5, 3.2, 'rgba(255,255,255,0.5)', 0.55);
+    done();
+    sigilMark(ctx, p, p.accent || C.teal, '◇');
+  }
+
+  function drawDiva(ctx, p, t) {
+    const done = beginP(ctx, p, t, 1.9);
+    const atk = p.attackAnim || 0;
+    // absinthe glow
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = 'rgba(143,216,160,0.08)';
+    ctx.beginPath(); ctx.arc(3, 0, 27, 0, TAU); ctx.fill();
+    ctx.restore();
+    // flapper dress + fringe
+    poly(ctx, [[-4, -7], [6, -8], [9, -3], [8, 4], [2, 8], [-8, 5]], '#1d5a42', 'rgba(166,221,168,0.55)', 0.9);
+    for (let i = 0; i < 7; i++) {
+      ln(ctx, -6 + i * 2.2, 4, -9 + i * 2.6 + Math.sin(t * 6 + i) * 1.2, 13, 'rgba(166,221,168,0.45)', 0.6);
+    }
+    // bob hair
+    ctx.beginPath(); ctx.arc(-2.0, 0, 9.2, Math.PI * 0.4, Math.PI * 1.6); ctx.fillStyle = '#0a070c'; ctx.fill();
+    // feather band (behind the face)
+    ctx.strokeStyle = C.gold; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(4.2, 0, 7.6, -2.1, 0.5); ctx.stroke();
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath(); ctx.moveTo(1, -5); ctx.quadraticCurveTo(-4 - i * 2, -12 - i * 2, -8 - i * 3, -17 - i * 3);
+      ctx.strokeStyle = 'rgba(166,221,168,0.8)'; ctx.lineWidth = 0.8; ctx.stroke();
+    }
+    // face
+    face(ctx, 10.2, 0, { hair: '#0a070c', eye: C.absinthe, blush: true, lip: '#8f3c4c' });
+    // arms + absinthe holder
+    ln(ctx, 4, -6, 13, -9, C.skin, 1.5);
+    ln(ctx, 4, 6, 12, 8, C.skin, 1.5);
+    ln(ctx, 12, 8, 28 + atk * 8, 5 + atk, '#1a2a20', 1.1);
+    el(ctx, 29 + atk * 8, 5 + atk, 1.6, 1.6, C.absinthe, 'rgba(166,221,168,0.8)', 0.6);
+    // green wisp
+    ctx.strokeStyle = 'rgba(166,221,168,0.35)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(29 + atk * 8, 3, 5 + Math.sin(t * 5) * 1.5, 0, TAU); ctx.stroke();
+    done();
+    sigilMark(ctx, p, p.accent || C.absinthe, '❧');
+  }
+
+  function drawWatchman(ctx, p, t) {
+    const done = beginP(ctx, p, t, 2.05);
+    const atk = p.attackAnim || 0;
+    // heavy cloak
+    curve(ctx, [[-5, -12], [-24, -19], [-35, -3], [-24, 14], [-3, 11]], '#2a151d', 'rgba(201,107,117,0.45)', 1);
+    // broad body
+    el(ctx, -1, 0, 13, 12, '#3a1b25', 'rgba(201,164,92,0.35)', 0.9);
+    // scarf
+    poly(ctx, [[1, -9], [12, -7], [10, 0], [1, 3]], '#7e2733');
+    ln(ctx, -2, 6, -16, 14 + Math.sin(t * 4) * 2, C.wineHi, 2.4);
+    // arms
+    ln(ctx, 5, -9, 14, -12, C.skin, 2);
+    ln(ctx, 5, 9, 14, 11, C.skin, 2);
+    // wide brim (behind the face)
+    el(ctx, 2.8, 0, 15, 8.5, '#0c0a0e', 'rgba(201,164,92,0.7)', 0.9);
+    el(ctx, 2.8, 0, 10, 5.5, '#171018');
+    // face
+    face(ctx, 10.8, 0, { hair: '#1b1218', eye: C.wineHi, fang: true, lip: '#7e2733' });
+    // bell/lantern
+    const bx = 24 + atk * 7;
+    ln(ctx, 14, 10, bx, 9, '#2a1c12', 1.6);
+    poly(ctx, [[bx - 3, 12], [bx + 3, 12], [bx + 5, 4], [bx - 5, 4]], '#1b1710', C.gold, 0.7);
+    el(ctx, bx, 4, 4, 2, C.gold, C.goldHi, 0.6);
+    el(ctx, bx, 13, 1.2, 1.2, C.goldHi);
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = 'rgba(242,223,174,0.09)';
+    ctx.beginPath(); ctx.arc(bx, 8, 14, 0, TAU); ctx.fill();
+    ctx.restore();
+    done();
+    sigilMark(ctx, p, p.accent || C.wineHi, '◒');
+  }
+
+  function drawTailor(ctx, p, t) {
+    const done = beginP(ctx, p, t, 1.85);
+    const atk = p.attackAnim || 0;
+    // measuring tape ribbon
+    ctx.strokeStyle = 'rgba(232,221,196,0.45)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-4, 8);
+    ctx.bezierCurveTo(-24, 18, -28, -10, -12, -12);
+    ctx.stroke();
+    for (let i = 0; i < 5; i++) {
+      const tx = -6 - i * 4, ty = 10 - Math.sin(i * 0.9) * 4;
+      ln(ctx, tx, ty, tx - 1.2, ty + 2, 'rgba(232,221,196,0.45)', 0.5);
+    }
+    // apron dress
+    poly(ctx, [[-5, -7], [5, -8], [8, 0], [5, 8], [-7, 6]], '#3a2228', 'rgba(215,138,154,0.45)', 0.8);
+    poly(ctx, [[-4, 1], [5, 0], [6, 7], [-5, 8]], 'rgba(232,221,196,0.2)');
+    // bob hair
+    ctx.beginPath(); ctx.arc(-1, 0, 7.4, Math.PI * 0.35, Math.PI * 1.65); ctx.fillStyle = '#0c090c'; ctx.fill();
+    // face
+    face(ctx, 10.2, 0, { hair: '#0c090c', eye: C.rose, blush: true, lip: '#8f3c4c' });
+    // scissors hairpin
+    ln(ctx, 1, -6, -5, -12, C.silverHi, 0.8);
+    ln(ctx, 1, -6, 4, -12, C.silverHi, 0.8);
+    el(ctx, -1, -9, 0.9, 0.9, 'none', C.gold, 0.5);
+    // shears
+    const sx = 23 + atk * 8;
+    ln(ctx, 12, 3, sx, -4 - atk * 2, C.silverHi, 1.3);
+    ln(ctx, 12, 1, sx, 8 + atk * 2, C.silverHi, 1.3);
+    el(ctx, 12, 2.5, 1.2, 1.2, 'none', C.gold, 0.6);
+    el(ctx, 12, 0.5, 1.2, 1.2, 'none', C.gold, 0.6);
+    // thread spool
+    el(ctx, -15, 4, 3, 2.5, C.wine, C.gold, 0.5);
+    ln(ctx, -15, 4, -6, 1, 'rgba(215,138,154,0.5)', 0.5);
+    done();
+    sigilMark(ctx, p, p.accent || C.rose, '✂');
+  }
+
+  CEN.playerArt = {
+    lady: drawLady,
+    count: drawCount,
+    valet: drawValet,
+    diva: drawDiva,
+    watchman: drawWatchman,
+    tailor: drawTailor
+  };
+
+  /* ============================ enemies ============================ */
+
+  function enemyFace(ctx, x, y, opts) {
+    return face(ctx, x, y, opts || { eye: C.goldHi, fang: true });
+  }
+
+  function drawWaiter(ctx, e, t) {
+    // long tailcoat
+    poly(ctx, [[-3, -7], [-20, -11], [-24, 3], [-10, 7], [-2, 6]], '#241c2c', 'rgba(201,164,92,0.5)', 0.7);
+    el(ctx, 0, 0, 9, 8.5, '#2e2238', 'rgba(201,164,92,0.45)', 0.7);
+    // shirt + bow
+    poly(ctx, [[2, -6], [9, -3], [9, 3], [2, 6]], 'rgba(232,221,196,0.85)');
+    bow(ctx, 7, 0, 2.6, C.wine);
+    // tray arm
+    ln(ctx, 5, -6, 13, -11, C.skin, 1.4);
+    ln(ctx, 13, -11, 20, -14, 'rgba(232,221,196,0.75)', 1);
+    el(ctx, 21, -14, 6.5, 2.6, 'rgba(201,164,92,0.7)', C.goldHi, 0.5);
+    ctx.fillStyle = 'rgba(232,221,196,0.55)';
+    ctx.fillRect(20, -20, 2.4, 5);
+    // legs
+    ln(ctx, -3, 5, -10, 12, '#0a070c', 2.2);
+    ln(ctx, -3, -5, -10, -12, '#0a070c', 2.2);
+    // slick hair (behind the face)
+    ctx.beginPath(); ctx.ellipse(4.0, -3.0, 5.5, 3.2, -0.4, 0, TAU); ctx.fillStyle = '#0a070c'; ctx.fill();
+    // head
+    enemyFace(ctx, 10.4, 0, { hair: '#0a070c', eye: C.goldHi, fang: true, lip: '#7e2733' });
+    // monocle
+    ctx.beginPath(); ctx.arc(13.4, 1.3, 2, 0, TAU); ctx.strokeStyle = 'rgba(242,223,174,0.8)'; ctx.lineWidth = 0.6; ctx.stroke();
+    ln(ctx, 14.8, 2.8, 17, 5, 'rgba(242,223,174,0.3)', 0.4);
+    // cuff
+    el(ctx, 13, -11, 1.2, 1.2, C.skin);
+  }
+
+  function drawDebutante(ctx, e, t) {
+    // twin drills
+    for (let side = -1; side <= 1; side += 2) {
+      ctx.save();
+      ctx.translate(-5, side * 6);
+      ctx.strokeStyle = '#0b0b10'; ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.bezierCurveTo(-12, side * 7, -16, -side * 5, -8, -side * 9);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(134,193,169,0.55)'; ctx.lineWidth = 0.7;
+      ctx.beginPath();
+      ctx.moveTo(-2, 0);
+      ctx.bezierCurveTo(-12, side * 5, -14, -side * 4, -8, -side * 8);
+      ctx.stroke();
+      ctx.restore();
+    }
+    // gown
+    curve(ctx, [[-2, -7], [-14, -17], [-26, -8], [-25, 7], [-5, 12], [7, 6]], '#1c5a42', 'rgba(134,193,169,0.55)', 0.9);
+    el(ctx, 0, 0, 9, 9, '#1d5a42', 'rgba(232,221,196,0.3)', 0.6);
+    // fan
+    const fa = Math.sin(t * 3 + e.x) * 0.1;
+    for (let i = -3; i <= 3; i++) {
+      const a = fa + i * 0.15;
+      ln(ctx, 9, 0, 9 + Math.cos(a) * 18, Math.sin(a) * 18, 'rgba(232,221,196,0.6)', 0.8);
+      el(ctx, 9 + Math.cos(a) * 17, Math.sin(a) * 17, 1.8, 1.8, 'rgba(134,193,169,0.35)', 'rgba(232,221,196,0.5)', 0.3);
+    }
+    // head
+    enemyFace(ctx, 8, 0, { hair: '#0b0b10', eye: C.emerald || '#86c1a9', blush: true, lip: '#a94b5d', twoEyes: true });
+    // tiara
+    poly(ctx, [[5, -6], [7, -9], [9, -6], [7, -4]], C.gold, C.goldHi, 0.5);
+    rose(ctx, 3, -7, 2, C.wine);
+    // choker
+    ln(ctx, 3, 5, 9, 5.5, C.ink, 1.4);
+    el(ctx, 6, 5.4, 0.9, 0.9, C.green);
+  }
+
+  function drawMoth(ctx, e, t) {
+    const flap = Math.sin(t * 12 + e.x) * 0.45;
+    // four wings
+    for (let side = -1; side <= 1; side += 2) {
+      for (let layer = 0; layer < 2; layer++) {
+        ctx.save();
+        ctx.scale(1, side);
+        ctx.rotate(flap * (0.35 + layer * 0.2));
+        ctx.beginPath();
+        ctx.ellipse(-6 - layer * 3, -10 - layer * 3, 18 - layer * 3, 8 - layer * 2, -0.45, 0, TAU);
+        ctx.fillStyle = layer ? 'rgba(41,31,46,0.8)' : 'rgba(63,48,72,0.72)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(242,223,174,0.4)';
+        ctx.lineWidth = 0.6;
+        ctx.stroke();
+        // eye spot
+        el(ctx, -8 - layer * 2, -13 - layer * 3, 2.6, 2.6, 'rgba(201,164,92,0.55)', 'rgba(242,223,174,0.55)', 0.3);
+        el(ctx, -8 - layer * 2, -13 - layer * 3, 1.1, 1.1, C.ink);
+        ctx.restore();
+      }
+    }
+    // body
+    el(ctx, 0, 0, 5, 9, '#1b1620', 'rgba(242,223,174,0.55)', 0.7);
+    // corset lacing
+    for (let i = 0; i < 3; i++) ln(ctx, -2, -3 + i * 3, 2, -2 + i * 3, 'rgba(242,223,174,0.4)', 0.5);
+    // head
+    enemyFace(ctx, 8, 0, { hair: '#0d0a12', eye: C.goldHi, lip: '#7e2733', fang: true });
+    // feather antennae
+    for (let side = -1; side <= 1; side += 2) {
+      ctx.beginPath();
+      ctx.moveTo(7, side * 3);
+      ctx.quadraticCurveTo(3, side * 12, -2, side * 16);
+      ctx.strokeStyle = 'rgba(242,223,174,0.6)';
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+      el(ctx, -3, side * 17, 2.2, 1, 'rgba(242,223,174,0.35)', 'rgba(242,223,174,0.5)', 0.3, side * 0.5);
+    }
+    // collar fluff
+    for (let i = 0; i < 4; i++) el(ctx, 2, -4 + i * 2.6, 2.4, 1.5, 'rgba(232,221,196,0.18)');
+    // dust
+    for (let i = 0; i < 5; i++) {
+      const a = t * 0.8 + i * 1.7;
+      el(ctx, Math.cos(a) * 16, Math.sin(a) * 12, 0.7, 0.7, 'rgba(242,223,174,0.45)');
+    }
+  }
+
+  function drawValetEnemy(ctx, e, t) {
+    // floating mirror
+    ctx.save();
+    ctx.translate(-14, -8);
+    ctx.rotate(-0.2 + Math.sin(t * 2) * 0.08);
+    poly(ctx, [[0, -9], [6, -2], [1, 9], [-6, 2]], 'rgba(203,232,238,0.28)', 'rgba(238,246,248,0.75)', 0.7);
+    ln(ctx, -2, -5, 2, 5, 'rgba(255,255,255,0.6)', 0.4);
+    ctx.restore();
+    // tailcoat
+    poly(ctx, [[-3, -7], [-21, -12], [-25, 2], [-10, 7], [-2, 6]], '#12303a', 'rgba(143,208,216,0.45)', 0.7);
+    el(ctx, 0, 0, 9, 8.5, '#1b3a44', 'rgba(203,214,220,0.3)', 0.7);
+    poly(ctx, [[2, -6], [9, -3], [9, 3], [2, 6]], 'rgba(232,221,196,0.65)');
+    // arms / glass
+    ln(ctx, 4, -6, 14, -10, C.skin, 1.2);
+    ln(ctx, 4, 6, 14, 9, C.skin, 1.2);
+    ln(ctx, 14, -10, 26, -13, C.silverHi, 1.1);
+    ln(ctx, 14, 9, 26, 12, C.silverHi, 1.1);
+    // head
+    enemyFace(ctx, 8, 0, { hair: '#c9d3d8', eye: C.teal, twoEyes: true, lip: '#5c4550' });
+    // mirror mask
+    poly(ctx, [[10, -5], [15, -2], [13, 5], [9, 3]], 'rgba(203,232,238,0.72)', 'rgba(238,246,248,0.9)', 0.6);
+    ln(ctx, 10.2, -3.4, 13.2, 3.1, 'rgba(255,255,255,0.45)', 0.5);
+    // shards
+    for (let i = 0; i < 3; i++) diamond(ctx, 20 + i * 4, -18 + i * 3, 2, 'rgba(143,208,216,0.3)', 'rgba(238,246,248,0.7)');
+  }
+
+  function drawSteward(ctx, e, t) {
+    // round body
+    el(ctx, -1, 0, 15, 12, '#1e3e28', 'rgba(166,221,168,0.45)', 0.8);
+    // apron
+    el(ctx, -1, 2, 9, 7, 'rgba(232,221,196,0.14)', 'rgba(232,221,196,0.25)', 0.5);
+    // top hat
+    el(ctx, 6, 0, 8, 5, '#090b09', 'rgba(166,221,168,0.5)', 0.6);
+    el(ctx, 6, 0, 5, 3.4, '#121a13');
+    // bottle arm
+    ln(ctx, 5, -8, 14, -13, C.skin, 1.3);
+    ctx.save();
+    ctx.translate(16, -15); ctx.rotate(-0.45);
+    ctx.fillStyle = 'rgba(166,221,168,0.55)';
+    ctx.fillRect(-2, -6, 4, 11);
+    ctx.fillRect(-1, -9, 2, 3);
+    ctx.restore();
+    // head
+    enemyFace(ctx, 9, 0, { hair: '#11180f', eye: C.absinthe, twoEyes: true, lip: '#4f6b51' });
+    // glasses
+    ctx.strokeStyle = 'rgba(242,223,174,0.75)'; ctx.lineWidth = 0.6;
+    ctx.beginPath(); ctx.arc(11.2, -1.2, 2, 0, TAU); ctx.stroke();
+    ctx.beginPath(); ctx.arc(11.2, 2.6, 2, 0, TAU); ctx.stroke();
+    ln(ctx, 13.2, -1, 13.8, 2.4, 'rgba(242,223,174,0.55)', 0.4);
+    // green drip
+    for (let i = 0; i < 3; i++) {
+      const dy = 5 + i * 3 + Math.sin(t * 3 + i) * 1.2;
+      el(ctx, -4 + i * 4, dy, 1.2, 2.4, 'rgba(166,221,168,0.35)');
+    }
+  }
+
+  function drawBouncer(ctx, e, t) {
+    // coat
+    el(ctx, -2, 0, 17, 13, '#3a1720', 'rgba(201,107,117,0.45)', 0.8);
+    // shoulders
+    poly(ctx, [[-13, -9], [4, -13], [4, 13], [-13, 9]], 'rgba(126,39,51,0.45)', 'rgba(201,107,117,0.35)', 0.6);
+    // head
+    enemyFace(ctx, 10, 0, { hair: '#0a070c', eye: C.wineHi, fang: true, lip: '#6e1f2b' });
+    // horned half-mask
+    poly(ctx, [[6, -7], [8, -13], [11, -8], [10, -3], [7, -3]], '#0a070c', C.gold, 0.6);
+    ln(ctx, 7, -8, 4, -15, C.ivory, 1.2);
+    ln(ctx, 10, -8, 14, -14, C.ivory, 1.2);
+    // fists
+    el(ctx, 17, -11, 4.2, 3.8, C.skin, 'rgba(201,107,117,0.5)', 0.5);
+    el(ctx, 17, 11, 4.2, 3.8, C.skin, 'rgba(201,107,117,0.5)', 0.5);
+    // cudgel
+    ln(ctx, 12, 10, 26, 16, '#2a1a14', 2.6);
+    el(ctx, 27, 17, 3.4, 3.4, '#3a2018', C.gold, 0.6);
+    // chains
+    for (let i = 0; i < 3; i++) el(ctx, -12 + i * 3, 10, 1.2, 0.8, 'none', 'rgba(201,164,92,0.5)', 0.4);
+    // scar
+    ln(ctx, 12, -3, 14, 3, 'rgba(126,39,51,0.55)', 0.7);
+  }
+
+  CEN.enemyArt = {
+    waiter: drawWaiter,
+    debutante: drawDebutante,
+    moth: drawMoth,
+    valet: drawValetEnemy,
+    steward: drawSteward,
+    bouncer: drawBouncer
+  };
 })(typeof window !== 'undefined' ? window : globalThis);
 
 </script>
