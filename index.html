@@ -3856,6 +3856,209 @@ body.campaign-open { overflow: hidden; }
   .street-bottom { bottom: 2px; }
   .street-gate { bottom: 46px; }
 }
+/* ============ RAINY STREET DETAIL PASS ============ */
+.street-player {
+  width: 150px; height: 220px; bottom: 82px;
+}
+.street-player canvas {
+  width: 150px; height: 215px; bottom: 0;
+  filter: drop-shadow(0 0 14px rgba(201,164,92,.18)) saturate(1.08);
+}
+.street-player .street-shadow {
+  left: 25px; right: 25px; bottom: 0; height: 16px;
+  background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,.82), rgba(0,0,0,.25) 55%, transparent 75%);
+  filter: blur(4px);
+}
+.street-player .player-label { bottom: -13px; font-size: 9px; color: rgba(232,221,196,.55); }
+.street-player::before {
+  content: ''; position: absolute; z-index: 2; left: 16px; right: 16px; bottom: 3px; height: 54px;
+  background: linear-gradient(180deg, transparent, rgba(170,195,200,.045));
+  filter: blur(6px); pointer-events: none;
+}
+.street-player canvas { animation: streetGlow 4.5s ease-in-out infinite alternate; }
+@keyframes streetGlow {
+  from { filter: drop-shadow(0 0 9px rgba(201,164,92,.13)) saturate(1.04); }
+  to { filter: drop-shadow(0 0 20px rgba(201,164,92,.28)) saturate(1.12); }
+}
+
+.street-weather {
+  position: absolute; inset: 0; z-index: 16; overflow: hidden; pointer-events: none;
+}
+.street-rain { position: absolute; inset: -12% 0 0; }
+.street-rain i {
+  position: absolute; top: -18%; width: 1px;
+  background: linear-gradient(180deg, transparent 0%, rgba(190,215,225,.58) 26%, rgba(232,221,196,.64) 82%, transparent 100%);
+  transform: rotate(7deg);
+  animation-name: streetRainFall; animation-timing-function: linear; animation-iteration-count: infinite;
+  box-shadow: 0 0 4px rgba(190,215,225,.22);
+}
+@keyframes streetRainFall {
+  from { transform: translate3d(0,-18vh,0) rotate(7deg); }
+  to { transform: translate3d(-34px,118vh,0) rotate(7deg); }
+}
+.street-rain::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 120px;
+  background: radial-gradient(ellipse at 30% 100%, rgba(190,215,225,.08), transparent 55%),
+              radial-gradient(ellipse at 72% 100%, rgba(190,215,225,.06), transparent 60%);
+  filter: blur(5px);
+}
+.street-mist {
+  position: absolute; left: -10%; right: -10%; bottom: 8%; height: 170px;
+  background: radial-gradient(ellipse at 28% 52%, rgba(178,198,199,.13), transparent 58%),
+              radial-gradient(ellipse at 72% 55%, rgba(178,198,199,.09), transparent 62%);
+  filter: blur(14px); animation: streetMist 18s ease-in-out infinite alternate;
+}
+.street-mist.mist-b { bottom: -2%; height: 150px; opacity: .55; animation-duration: 25s; animation-direction: alternate-reverse; }
+@keyframes streetMist { from { transform: translate3d(-40px,0,0); } to { transform: translate3d(50px,-7px,0); } }
+.street-lightning { position: absolute; inset: 0; background: rgba(200,220,230,0); animation: streetLightning 13.5s infinite; }
+@keyframes streetLightning {
+  0%, 89%, 100% { background: rgba(200,220,230,0); }
+  89.6% { background: rgba(200,220,230,.14); }
+  90% { background: rgba(200,220,230,0); }
+  90.7% { background: rgba(200,220,230,.08); }
+  91.1% { background: rgba(200,220,230,0); }
+}
+.street-road {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(201,164,92,.10), transparent 56%),
+    repeating-linear-gradient(90deg, transparent 0 74px, rgba(220,215,200,.07) 75px 76px, transparent 77px 150px),
+    repeating-linear-gradient(0deg, transparent 0 27px, rgba(220,215,200,.045) 28px 29px, transparent 30px 58px),
+    linear-gradient(180deg, #0b090d, #171116 62%, #09070a);
+}
+.street-road::before {
+  background:
+    linear-gradient(90deg, transparent, rgba(201,164,92,.055) 22%, transparent 42%, rgba(180,200,205,.035) 68%, transparent),
+    repeating-linear-gradient(90deg, transparent 0 120px, rgba(210,220,215,.05) 121px 122px, transparent 123px 240px);
+  opacity: .9;
+}
+.street-road::after {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; height: 100%; pointer-events: none;
+  background:
+    radial-gradient(ellipse at 22% 30%, rgba(218,180,110,.10), transparent 34%),
+    radial-gradient(ellipse at 78% 24%, rgba(218,180,110,.07), transparent 36%),
+    linear-gradient(180deg, rgba(0,0,0,.18), transparent 34%, rgba(190,205,205,.045) 100%);
+  mix-blend-mode: screen;
+}
+
+.street-props { position: absolute; inset: 0; z-index: 7; pointer-events: none; }
+.street-puddle {
+  position: absolute; width: 190px; height: 30px; border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 44%, rgba(180,205,210,.22), rgba(70,90,95,.08) 42%, transparent 72%);
+  filter: blur(1.2px); opacity: .85; transform: skewX(-14deg);
+}
+.street-puddle::after {
+  content: ''; position: absolute; left: 32%; top: 20%; width: 34%; height: 40%; border-radius: 50%;
+  background: linear-gradient(180deg, rgba(235,215,165,.18), transparent); filter: blur(3px);
+}
+.street-puddle.p1 { left: 330px; bottom: 34px; }
+.street-puddle.p2 { left: 900px; bottom: 22px; width: 230px; height: 34px; }
+.street-puddle.p3 { left: 1460px; bottom: 40px; width: 160px; height: 26px; }
+
+.street-crate {
+  position: absolute; width: 54px; height: 46px; bottom: 20px;
+  background: linear-gradient(135deg, #20151a, #0d090c); border: 1px solid rgba(201,164,92,.24);
+  box-shadow: 7px 8px 0 rgba(0,0,0,.32), inset 0 0 14px rgba(0,0,0,.65);
+}
+.street-crate::before, .street-crate::after {
+  content: ''; position: absolute; left: 4px; right: 4px; height: 1px; background: rgba(201,164,92,.22);
+}
+.street-crate::before { top: 13px; transform: rotate(-6deg); }
+.street-crate::after { bottom: 12px; transform: rotate(6deg); }
+.street-crate.c1 { left: 340px; }
+.street-crate.c2 { left: 405px; bottom: 16px; width: 40px; height: 34px; }
+.street-barrel {
+  position: absolute; width: 44px; height: 56px; bottom: 18px;
+  background: linear-gradient(90deg, #160e12, #2a1a1a 48%, #100a0d);
+  border: 1px solid rgba(201,164,92,.22); border-radius: 7px 7px 4px 4px;
+  box-shadow: 6px 7px 0 rgba(0,0,0,.28), inset 0 0 16px rgba(0,0,0,.7);
+}
+.street-barrel::before, .street-barrel::after {
+  content: ''; position: absolute; left: -2px; right: -2px; height: 2px; background: rgba(201,164,92,.28);
+}
+.street-barrel::before { top: 12px; } .street-barrel::after { bottom: 12px; }
+.street-barrel.b1 { left: 1320px; }
+.street-barrel.b2 { left: 1530px; width: 38px; height: 48px; }
+.street-cat {
+  position: absolute; left: 470px; bottom: 58px; width: 38px; height: 30px;
+  filter: drop-shadow(0 0 8px rgba(201,164,92,.18));
+}
+.street-cat::before {
+  content: ''; position: absolute; left: 8px; bottom: 2px; width: 24px; height: 14px;
+  border-radius: 50% 50% 40% 40%; background: #070508;
+}
+.street-cat i {
+  position: absolute; left: 25px; bottom: 11px; width: 15px; height: 13px; border-radius: 50%; background: #070508;
+}
+.street-cat i::before, .street-cat i::after {
+  content: ''; position: absolute; top: -5px; width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 8px solid #070508;
+}
+.street-cat i::before { left: 1px; } .street-cat i::after { right: 1px; }
+.street-cat::after {
+  content: ''; position: absolute; left: 6px; bottom: 12px; width: 16px; height: 8px;
+  border-top: 3px solid #070508; border-radius: 50%; transform: rotate(-24deg);
+}
+.street-cat i { background-image: radial-gradient(circle at 4px 5px, rgba(220,180,90,.95) 0 1px, transparent 1.5px), radial-gradient(circle at 10px 5px, rgba(220,180,90,.95) 0 1px, transparent 1.5px); }
+.street-string {
+  position: absolute; left: 0; right: 0; top: 158px; height: 1px; z-index: 6;
+  background: linear-gradient(90deg, transparent, rgba(201,164,92,.18) 12%, rgba(201,164,92,.28) 50%, rgba(201,164,92,.18) 88%, transparent);
+  opacity: .8;
+}
+.street-string i {
+  position: absolute; top: -3px; width: 5px; height: 7px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,224,160,.95), rgba(201,164,92,.18));
+  box-shadow: 0 0 12px rgba(255,213,140,.5), 0 0 28px rgba(255,213,140,.22);
+}
+.street-string i:nth-child(1) { left: 14%; } .street-string i:nth-child(2) { left: 31%; }
+.street-string i:nth-child(3) { left: 49%; } .street-string i:nth-child(4) { left: 68%; }
+.street-string i:nth-child(5) { left: 85%; }
+
+/* wet shop detailing */
+.street-shop .shop-roof { filter: drop-shadow(0 8px 16px rgba(0,0,0,.7)) saturate(1.05); }
+.street-shop .shop-roof::after {
+  content: ''; position: absolute; left: 12%; right: 12%; top: 20%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(200,220,225,.22), transparent);
+  box-shadow: 0 8px 0 rgba(200,220,225,.08), 0 20px 0 rgba(200,220,225,.05);
+}
+.street-shop .shop-chimney::after {
+  content: ''; position: absolute; left: 4px; bottom: 100%; width: 12px; height: 28px;
+  background: linear-gradient(180deg, transparent, rgba(170,180,178,.10));
+  filter: blur(5px); animation: chimneySmoke 4.5s ease-out infinite;
+}
+@keyframes chimneySmoke { 0% { opacity: 0; transform: translateY(5px) scale(.8); } 35% { opacity: .55; } 100% { opacity: 0; transform: translateY(-14px) scale(1.35); } }
+.street-shop .shop-body {
+  box-shadow: inset 0 0 0 6px rgba(0,0,0,.25), inset 0 -18px 36px rgba(0,0,0,.45), 0 12px 30px rgba(0,0,0,.5);
+}
+.street-shop .shop-body::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(115deg, transparent 18%, rgba(200,220,225,.055) 19%, transparent 20%),
+              linear-gradient(180deg, rgba(200,220,225,.05), transparent 24%);
+}
+.street-shop .shop-door { box-shadow: inset 0 0 26px rgba(0,0,0,.8), 0 0 22px rgba(201,164,92,.08); }
+.street-shop .shop-door::before {
+  content: ''; position: absolute; left: 8px; right: 8px; bottom: 0; height: 50%;
+  background: linear-gradient(0deg, rgba(225,184,105,.20), transparent); filter: blur(4px);
+}
+.street-shop .shop-window {
+  box-shadow: 0 0 24px var(--shop-glow, rgba(230,194,118,.35)), inset 0 0 13px rgba(255,241,196,.55), 0 0 44px rgba(210,170,90,.10);
+}
+.street-shop .shop-sign { box-shadow: 0 4px 0 rgba(0,0,0,.55), 0 0 22px rgba(0,0,0,.55), inset 0 0 12px rgba(201,164,92,.04); }
+.street-shop .shop-seal { box-shadow: 0 0 0 1px rgba(0,0,0,.6), 0 0 14px rgba(201,164,92,.12); }
+
+/* mobile keeps the atmosphere but fewer drops */
+@media (max-width: 900px), (pointer: coarse) {
+  .street-player { width: 112px; height: 166px; bottom: 48px; }
+  .street-player canvas { width: 112px; height: 161px; }
+  .street-player .street-shadow { left: 21px; right: 21px; height: 12px; }
+  .street-player .player-label { bottom: -11px; font-size: 7px; }
+  .street-rain i:nth-child(3n) { display: none; }
+  .street-string { top: 126px; }
+  .street-crate, .street-barrel, .street-cat { transform: scale(.78); transform-origin: bottom left; }
+  .street-puddle.p1 { left: 260px; bottom: 24px; width: 150px; }
+  .street-puddle.p2 { left: 800px; bottom: 18px; width: 180px; }
+  .street-puddle.p3 { left: 1320px; bottom: 28px; width: 130px; }
+  .street-mist { height: 120px; }
+  .street-lightning { animation-duration: 17s; }
+}
 
 </style>
 <link rel="stylesheet" href="css/campaign.css">
@@ -9733,7 +9936,7 @@ body.campaign-open { overflow: hidden; }
     } else {
       s.moving = false;
     }
-    player.style.transform = 'translate3d(' + (s.x - 60) + 'px,0,0)';
+    player.style.transform = 'translate3d(' + (s.x - (player.offsetWidth || 120) / 2) + 'px,0,0)';
     player.classList.toggle('walking', s.moving);
     player.classList.toggle('face-left', s.dir < 0);
     const cam = clampN(s.x - vp.clientWidth / 2, 0, Math.max(0, 1850 - vp.clientWidth));
@@ -9861,7 +10064,7 @@ body.campaign-open { overflow: hidden; }
     } else {
       s.moving = false;
     }
-    player.style.transform = 'translate3d(' + (s.x - 60) + 'px,0,0)';
+    player.style.transform = 'translate3d(' + (s.x - (player.offsetWidth || 120) / 2) + 'px,0,0)';
     player.classList.toggle('walking', s.moving);
     player.classList.toggle('face-left', s.dir < 0);
     const cam = clampN(s.x - vp.clientWidth / 2, 0, Math.max(0, 1850 - vp.clientWidth));
@@ -9934,6 +10137,372 @@ body.campaign-open { overflow: hidden; }
     else if (k === 'ArrowRight' || k === 'd' || k === 'D') state.street.right = false;
   }
 
+  /* Detailed anime-gothic street avatar. Drawn at 2x for crisp scaling. */
+  function drawStreetAvatar(char) {
+    const cv = document.getElementById('street-avatar');
+    if (!cv || !char) return;
+    cv.width = 300; cv.height = 430;
+    drawStreetFigure(cv.getContext('2d'), char);
+  }
+
+  function drawStreetFigure(g, char) {
+    const id = char.id || 'lady';
+    const PAL = {
+      lady:    { hair: '#171221', hair2: '#372747', dress: '#17121d', accent: '#d8b878', eye: '#c9a45c' },
+      count:   { hair: '#111014', hair2: '#2b2a2e', dress: '#0d0f11', accent: '#d8d6cf', eye: '#9fb6bf' },
+      valet:   { hair: '#cfd7dc', hair2: '#7e99a6', dress: '#0a151a', accent: '#bfe3e8', eye: '#8fd8e0' },
+      diva:    { hair: '#2a151c', hair2: '#4a2732', dress: '#102a22', accent: '#b6d69a', eye: '#9fdc9a' },
+      watchman:{ hair: '#1b1415', hair2: '#3a2729', dress: '#151017', accent: '#d46b74', eye: '#e0a45f' },
+      tailor:  { hair: '#7a2c2e', hair2: '#b45a4e', dress: '#1c1412', accent: '#e8dcc4', eye: '#d8b878' }
+    };
+    const c = PAL[id] || PAL.lady;
+    const SKIN = '#e7ccb4', SKIN2 = '#c7a18a', INK = '#09070b';
+    const CX = 150, GY = 414;
+    const female = id === 'lady' || id === 'diva' || id === 'tailor';
+
+    g.clearRect(0, 0, 300, 430);
+    g.save();
+    g.lineJoin = 'round'; g.lineCap = 'round';
+
+    // wet ground + aura
+    let grd = g.createRadialGradient(CX, GY, 4, CX, GY, 86);
+    grd.addColorStop(0, 'rgba(0,0,0,.78)');
+    grd.addColorStop(.55, 'rgba(0,0,0,.28)');
+    grd.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = grd; g.beginPath(); g.ellipse(CX, GY, 84, 15, 0, 0, Math.PI * 2); g.fill();
+    grd = g.createRadialGradient(CX, 210, 10, CX, 230, 150);
+    grd.addColorStop(0, 'rgba(201,164,92,.13)');
+    grd.addColorStop(1, 'rgba(201,164,92,0)');
+    g.fillStyle = grd; g.fillRect(0, 40, 300, 390);
+
+    // folded lace parasol at her side (kept low so the face stays readable)
+    g.save();
+    g.translate(206, 276); g.rotate(.2);
+    g.strokeStyle = '#0a070d'; g.lineWidth = 4;
+    g.beginPath(); g.moveTo(0, 0); g.lineTo(16, -154); g.stroke();
+    g.strokeStyle = c.accent; g.globalAlpha = .55; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(1, -2); g.lineTo(17, -154); g.stroke();
+    g.fillStyle = 'rgba(8,6,10,.95)';
+    g.beginPath(); g.moveTo(9, -128); g.quadraticCurveTo(-8, -168, 17, -196); g.quadraticCurveTo(35, -168, 25, -128); g.closePath(); g.fill();
+    g.strokeStyle = c.accent; g.globalAlpha = .65;
+    g.beginPath(); g.moveTo(17, -196); g.lineTo(9, -128); g.moveTo(17, -196); g.lineTo(25, -128); g.stroke();
+    g.globalAlpha = 1; g.restore();
+
+    // boots / legs
+    g.strokeStyle = INK; g.lineWidth = 12;
+    g.beginPath(); g.moveTo(136, 292); g.quadraticCurveTo(128, 344, 132, 392); g.stroke();
+    g.beginPath(); g.moveTo(164, 292); g.quadraticCurveTo(172, 344, 168, 392); g.stroke();
+    g.fillStyle = '#0a070b';
+    g.beginPath(); g.ellipse(130, 399, 22, 9, -.05, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.ellipse(172, 399, 22, 9, .05, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = c.accent; g.globalAlpha = .55; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(122, 394); g.quadraticCurveTo(132, 401, 146, 396); g.stroke();
+    g.globalAlpha = 1;
+
+    // layered gothic skirt
+    g.fillStyle = c.dress; g.strokeStyle = c.accent; g.globalAlpha = .95;
+    g.beginPath();
+    g.moveTo(119, 254);
+    g.bezierCurveTo(94, 296, 72, 360, 78, 397);
+    g.quadraticCurveTo(116, 414, 150, 414);
+    g.quadraticCurveTo(186, 414, 222, 397);
+    g.bezierCurveTo(228, 358, 204, 296, 181, 254);
+    g.closePath(); g.fill();
+    g.globalAlpha = .35; g.lineWidth = 1.3; g.stroke();
+    g.globalAlpha = .9;
+    g.beginPath(); g.moveTo(112, 282); g.bezierCurveTo(96, 332, 88, 374, 94, 399); g.stroke();
+    g.beginPath(); g.moveTo(188, 282); g.bezierCurveTo(204, 332, 212, 374, 206, 399); g.stroke();
+    g.globalAlpha = .5;
+    for (let i = 0; i < 5; i++) {
+      const x = 108 + i * 21;
+      g.beginPath(); g.moveTo(150, 266); g.quadraticCurveTo(x, 338, 104 + i * 23, 404); g.stroke();
+    }
+    g.globalAlpha = 1;
+
+    // torso / bodice
+    g.fillStyle = c.dress;
+    g.beginPath();
+    g.moveTo(121, 215); g.quadraticCurveTo(150, 228, 179, 215);
+    g.bezierCurveTo(188, 238, 184, 258, 181, 268);
+    g.quadraticCurveTo(150, 280, 119, 268);
+    g.bezierCurveTo(116, 258, 112, 238, 121, 215);
+    g.closePath(); g.fill();
+    g.strokeStyle = c.accent; g.globalAlpha = .55; g.lineWidth = 1.2; g.stroke(); g.globalAlpha = 1;
+
+    // gold filigree on bodice
+    g.strokeStyle = c.accent; g.globalAlpha = .7; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(150, 232); g.lineTo(150, 270);
+    g.moveTo(138, 240); g.quadraticCurveTo(150, 250, 162, 240);
+    g.moveTo(134, 254); g.quadraticCurveTo(150, 264, 166, 254); g.stroke();
+    g.globalAlpha = 1;
+
+    // arms and gloves
+    g.strokeStyle = SKIN; g.lineWidth = 9;
+    g.beginPath(); g.moveTo(122, 224); g.quadraticCurveTo(106, 246, 98, 272); g.stroke();
+    g.beginPath(); g.moveTo(178, 224); g.quadraticCurveTo(194, 248, 200, 272); g.stroke();
+    g.fillStyle = SKIN;
+    g.beginPath(); g.ellipse(98, 276, 6.5, 8, -.2, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.ellipse(200, 276, 6.5, 8, .2, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#0d0a10'; g.globalAlpha = .9;
+    g.beginPath(); g.ellipse(98, 283, 7, 9, -.2, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.ellipse(200, 283, 7, 9, .2, 0, Math.PI * 2); g.fill();
+    g.globalAlpha = 1;
+
+    // neck + lace collar
+    g.fillStyle = SKIN2;
+    g.fillRect(140, 195, 20, 23);
+    g.fillStyle = SKIN;
+    g.beginPath(); g.moveTo(128, 214); g.quadraticCurveTo(150, 228, 172, 214);
+    g.quadraticCurveTo(168, 230, 150, 235); g.quadraticCurveTo(132, 230, 128, 214); g.fill();
+    g.strokeStyle = c.accent; g.globalAlpha = .55; g.lineWidth = 1.2;
+    for (let i = 0; i < 5; i++) {
+      const x = 131 + i * 9.5;
+      g.beginPath(); g.moveTo(x, 216); g.quadraticCurveTo(x + 4, 226, x + 8, 217); g.stroke();
+    }
+    g.globalAlpha = 1;
+
+    // head is drawn slightly smaller than the body: 5-head anime proportions
+    g.save();
+    g.translate(150, 194); g.scale(.74, .74); g.translate(-150, -194);
+
+    // hair mass behind the face
+    g.fillStyle = c.hair;
+    g.beginPath(); g.ellipse(150, 153, 49, 58, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = c.hair2; g.globalAlpha = .35;
+    g.beginPath(); g.ellipse(132, 130, 26, 35, -.5, 0, Math.PI * 2); g.fill();
+    g.globalAlpha = 1;
+    // long side locks
+    g.fillStyle = c.hair;
+    g.beginPath(); g.moveTo(104, 145); g.bezierCurveTo(88, 184, 94, 236, 108, 263);
+    g.bezierCurveTo(118, 232, 112, 184, 120, 154); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(196, 145); g.bezierCurveTo(212, 184, 206, 236, 192, 263);
+    g.bezierCurveTo(182, 232, 188, 184, 180, 154); g.closePath(); g.fill();
+
+    // face
+    g.fillStyle = SKIN;
+    g.beginPath();
+    g.moveTo(150, 111);
+    g.bezierCurveTo(124, 113, 116, 137, 120, 158);
+    g.bezierCurveTo(123, 180, 136, 197, 150, 199);
+    g.bezierCurveTo(164, 197, 177, 180, 180, 158);
+    g.bezierCurveTo(184, 137, 176, 113, 150, 111);
+    g.closePath(); g.fill();
+    g.strokeStyle = 'rgba(80,53,48,.35)'; g.lineWidth = 1; g.stroke();
+
+    // delicate facial shading (keeps the face from reading as a flat mask)
+    g.fillStyle = 'rgba(120,70,60,.10)';
+    g.beginPath(); g.ellipse(150, 187, 20, 8, 0, 0, Math.PI); g.fill();
+    g.fillStyle = 'rgba(255,244,224,.16)';
+    g.beginPath(); g.ellipse(150, 137, 18, 9, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = 'rgba(180,120,100,.08)';
+    g.beginPath(); g.ellipse(124, 165, 5, 13, -.2, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.ellipse(176, 165, 5, 13, .2, 0, Math.PI * 2); g.fill();
+
+    // cheek blush
+    if (female) {
+      g.fillStyle = 'rgba(201,105,105,.16)';
+      g.beginPath(); g.ellipse(130, 178, 8, 4, -.15, 0, Math.PI * 2); g.fill();
+      g.beginPath(); g.ellipse(170, 178, 8, 4, .15, 0, Math.PI * 2); g.fill();
+    }
+
+    // eyes: almond-shaped, glossy, anime-gothic (no heavy lash bar)
+    const eyeY = 161, eyeW = female ? 8.6 : 8, eyeH = female ? 6.5 : 5.8;
+    [-1, 1].forEach(function (side) {
+      const ex = 150 + side * 13.2;
+      // eye shadow
+      g.fillStyle = 'rgba(90,45,55,.12)';
+      g.beginPath(); g.ellipse(ex, eyeY - 1, eyeW + 2, eyeH + 2.5, 0, 0, Math.PI * 2); g.fill();
+      // sclera
+      g.fillStyle = '#fff9ef';
+      g.beginPath();
+      g.moveTo(ex - eyeW, eyeY);
+      g.quadraticCurveTo(ex, eyeY - eyeH - 2.2, ex + eyeW, eyeY - 1.2);
+      g.quadraticCurveTo(ex, eyeY + eyeH + 1.8, ex - eyeW, eyeY);
+      g.closePath(); g.fill();
+      // iris
+      g.fillStyle = 'rgba(28,18,24,.92)';
+      g.beginPath(); g.arc(ex + side * .8, eyeY, 4.1, 0, Math.PI * 2); g.fill();
+      g.fillStyle = c.eye;
+      g.beginPath(); g.arc(ex + side * .8, eyeY, 3.2, 0, Math.PI * 2); g.fill();
+      g.fillStyle = 'rgba(255,255,255,.25)';
+      g.beginPath(); g.ellipse(ex + side * .8, eyeY + 1.4, 2.5, 1.3, 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#0a070b';
+      g.beginPath(); g.ellipse(ex + side * .8, eyeY + .4, 1.25, 1.8, 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#fffdf7';
+      g.beginPath(); g.ellipse(ex - 1.8 + side * .8, eyeY - 1.8, 1.2, 1.5, -.3, 0, Math.PI * 2); g.fill();
+      g.beginPath(); g.arc(ex + 1.6 + side * .8, eyeY + 1.9, .55, 0, Math.PI * 2); g.fill();
+      // fine upper lid, wings only at the outer corner
+      g.strokeStyle = '#1a1016'; g.lineWidth = 1.05;
+      g.beginPath(); g.moveTo(ex - eyeW, eyeY - .8);
+      g.quadraticCurveTo(ex, eyeY - eyeH - 2.6, ex + eyeW, eyeY - 1.2); g.stroke();
+      g.lineWidth = .9;
+      g.beginPath(); g.moveTo(ex + side * eyeW, eyeY - 1); g.lineTo(ex + side * (eyeW + 2.2), eyeY - 3); g.stroke();
+      // thin brow
+      g.strokeStyle = c.hair2; g.globalAlpha = .8; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(ex - eyeW + 1, eyeY - 11); g.quadraticCurveTo(ex, eyeY - 13, ex + eyeW - 1, eyeY - 10); g.stroke();
+      g.globalAlpha = 1;
+    });
+
+    // nose
+    g.strokeStyle = 'rgba(120,75,65,.5)'; g.lineWidth = .9;
+    g.beginPath(); g.moveTo(151, 169); g.quadraticCurveTo(153.5, 174, 150, 175); g.stroke();
+    // mouth
+    g.strokeStyle = female ? '#a44a55' : 'rgba(100,60,60,.75)'; g.lineWidth = 1.6;
+    g.beginPath(); g.moveTo(145, 185); g.quadraticCurveTo(150, 188, 155, 185); g.stroke();
+
+    // fringe + face-framing tendrils
+    g.fillStyle = c.hair;
+    g.beginPath();
+    g.moveTo(110, 143); g.bezierCurveTo(114, 111, 132, 104, 150, 106);
+    g.bezierCurveTo(168, 104, 186, 112, 190, 143);
+    g.quadraticCurveTo(176, 130, 166, 140); g.quadraticCurveTo(158, 122, 149, 136);
+    g.quadraticCurveTo(141, 120, 133, 139); g.quadraticCurveTo(123, 128, 110, 143);
+    g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(122, 125); g.quadraticCurveTo(126, 166, 132, 190); g.quadraticCurveTo(124, 170, 116, 138); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(178, 125); g.quadraticCurveTo(174, 166, 168, 190); g.quadraticCurveTo(176, 170, 184, 138); g.closePath(); g.fill();
+    g.strokeStyle = c.accent; g.globalAlpha = .25; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(124, 120); g.quadraticCurveTo(142, 108, 160, 118); g.stroke(); g.globalAlpha = 1;
+
+    // earring + choker
+    g.fillStyle = c.accent; g.beginPath(); g.arc(181, 176, 2.4, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = c.accent; g.globalAlpha = .55; g.lineWidth = 1.4;
+    g.beginPath(); g.moveTo(135, 207); g.quadraticCurveTo(150, 211, 165, 207); g.stroke(); g.globalAlpha = 1;
+
+    // headwear
+    drawStreetHeadwear(g, id, c, female);
+    g.restore();
+
+    // parasol shaft + right hand grip
+    g.strokeStyle = c.accent; g.globalAlpha = .5; g.lineWidth = 1.3;
+    g.beginPath(); g.moveTo(214, 104); g.quadraticCurveTo(204, 196, 198, 276); g.stroke();
+    g.globalAlpha = 1;
+    g.strokeStyle = 'rgba(10,7,11,.9)'; g.lineWidth = 4;
+    g.beginPath(); g.moveTo(214, 104); g.quadraticCurveTo(204, 196, 198, 276); g.stroke();
+    g.strokeStyle = c.accent; g.lineWidth = 1.2; g.globalAlpha = .65;
+    g.beginPath(); g.moveTo(214, 104); g.quadraticCurveTo(204, 196, 198, 276); g.stroke(); g.globalAlpha = 1;
+
+    // accessories
+    drawStreetAccessory(g, id, c, female);
+
+    // fine gold rim on silhouette
+    g.strokeStyle = c.accent; g.globalAlpha = .32; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(121, 216); g.quadraticCurveTo(96, 250, 88, 292); g.stroke();
+    g.beginPath(); g.moveTo(179, 216); g.quadraticCurveTo(204, 250, 212, 292); g.stroke();
+    g.globalAlpha = 1;
+    g.restore();
+  }
+
+  function drawStreetHeadwear(g, id, c, female) {
+    if (id === 'count') {
+      g.fillStyle = '#0b0a0d'; g.strokeStyle = c.accent; g.lineWidth = 1;
+      g.fillRect(120, 68, 60, 48); g.strokeRect(120, 68, 60, 48);
+      g.fillStyle = c.accent; g.fillRect(120, 106, 60, 5);
+      g.beginPath(); g.ellipse(150, 119, 47, 7, 0, 0, Math.PI * 2); g.fill();
+      return;
+    }
+    if (id === 'watchman') {
+      g.fillStyle = '#0b090c'; g.strokeStyle = c.accent; g.lineWidth = 1;
+      g.beginPath(); g.ellipse(150, 116, 61, 12, 0, 0, Math.PI * 2); g.fill(); g.stroke();
+      g.fillRect(121, 88, 58, 30); g.strokeRect(121, 88, 58, 30);
+      g.fillStyle = c.accent; g.globalAlpha = .6; g.fillRect(121, 112, 58, 4); g.globalAlpha = 1;
+      return;
+    }
+    if (id === 'lady' || id === 'diva') {
+      if (id === 'diva') {
+        g.strokeStyle = c.accent; g.lineWidth = 2;
+        for (let i = 0; i < 5; i++) {
+          const a = -1.9 + i * .16;
+          g.beginPath(); g.moveTo(178, 116); g.quadraticCurveTo(178 + Math.cos(a) * 26, 116 + Math.sin(a) * 46, 166 + i * 3, 82); g.stroke();
+        }
+        g.fillStyle = c.accent; g.beginPath(); g.arc(178, 116, 3.2, 0, Math.PI * 2); g.fill();
+        return;
+      }
+      g.fillStyle = '#0b0810'; g.strokeStyle = c.accent; g.lineWidth = 1;
+      g.beginPath(); g.ellipse(150, 116, 58, 10, 0, 0, Math.PI * 2); g.fill(); g.stroke();
+      g.beginPath(); g.ellipse(150, 108, 30, 12, 0, 0, Math.PI * 2); g.fill(); g.stroke();
+      g.strokeStyle = c.accent; g.globalAlpha = .65;
+      for (let i = 0; i < 4; i++) {
+        g.beginPath(); g.moveTo(176, 108); g.quadraticCurveTo(196 + i * 6, 62 - i * 12, 218 + i * 8, 54 + i * 4); g.stroke();
+      }
+      g.globalAlpha = 1;
+      return;
+    }
+    if (id === 'tailor') {
+      g.fillStyle = c.hair2; g.beginPath(); g.arc(174, 106, 18, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = c.accent; g.lineWidth = 1.8;
+      g.beginPath(); g.moveTo(104, 116); g.lineTo(94, 98); g.moveTo(104, 116); g.lineTo(118, 98); g.stroke();
+      return;
+    }
+    // valet silver hair sweep
+    g.strokeStyle = c.hair2; g.globalAlpha = .55; g.lineWidth = 1.4;
+    g.beginPath(); g.moveTo(112, 122); g.quadraticCurveTo(150, 96, 190, 126); g.stroke();
+    g.globalAlpha = 1;
+  }
+
+  function drawStreetAccessory(g, id, c) {
+    g.save();
+    if (id === 'lady') {
+      g.translate(92, 272); g.rotate(-.35);
+      g.fillStyle = 'rgba(10,7,12,.9)'; g.strokeStyle = c.accent; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(0, 0); g.quadraticCurveTo(-30, -26, -2, -46); g.quadraticCurveTo(30, -26, 0, 0); g.fill(); g.stroke();
+      for (let i = 0; i < 5; i++) { g.beginPath(); g.moveTo(0, 0); g.lineTo(-24 + i * 12, -36); g.stroke(); }
+    } else if (id === 'count') {
+      g.strokeStyle = c.accent; g.globalAlpha = .7; g.lineWidth = 2;
+      g.beginPath(); g.moveTo(202, 272); g.lineTo(220, 408); g.stroke();
+      g.beginPath(); g.arc(220, 408, 4, 0, Math.PI * 2); g.stroke();
+    } else if (id === 'valet') {
+      g.translate(92, 158); g.rotate(-.2);
+      g.fillStyle = 'rgba(180,230,236,.8)'; g.strokeStyle = c.accent; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(0, -20); g.lineTo(18, -6); g.lineTo(8, 20); g.lineTo(-10, 12); g.closePath(); g.fill(); g.stroke();
+      g.globalAlpha = .45; g.fillStyle = '#fff'; g.beginPath(); g.moveTo(2, -14); g.lineTo(10, -5); g.lineTo(1, 6); g.fill();
+    } else if (id === 'diva') {
+      g.translate(202, 270);
+      g.strokeStyle = c.accent; g.lineWidth = 1.2;
+      g.beginPath(); g.moveTo(-7, -2); g.lineTo(7, -2); g.lineTo(5, 18); g.lineTo(-5, 18); g.closePath(); g.stroke();
+      g.fillStyle = 'rgba(159,216,160,.55)'; g.fillRect(-5, 4, 10, 12);
+      g.beginPath(); g.moveTo(-4, 18); g.lineTo(4, 18); g.stroke();
+    } else if (id === 'watchman') {
+      g.translate(92, 262);
+      g.strokeStyle = c.accent; g.lineWidth = 1.2;
+      g.beginPath(); g.moveTo(0, -2); g.lineTo(0, -18); g.stroke();
+      g.fillStyle = 'rgba(230,194,118,.85)'; g.strokeStyle = c.accent;
+      g.fillRect(-9, -18, 18, 24); g.strokeRect(-9, -18, 18, 24);
+      g.globalAlpha = .35; g.fillStyle = '#f5d38e'; g.beginPath(); g.arc(0, -6, 5, 0, Math.PI * 2); g.fill();
+    } else if (id === 'tailor') {
+      g.translate(92, 272); g.rotate(-.2);
+      g.strokeStyle = c.accent; g.lineWidth = 1.6;
+      g.beginPath(); g.moveTo(-4, -14); g.lineTo(-18, 16); g.moveTo(-4, -14); g.lineTo(10, 16); g.stroke();
+      g.beginPath(); g.arc(-18, 18, 4, 0, Math.PI * 2); g.stroke();
+      g.beginPath(); g.arc(10, 18, 4, 0, Math.PI * 2); g.stroke();
+      g.strokeStyle = c.accent; g.globalAlpha = .55;
+      g.beginPath(); g.moveTo(18, -24); g.quadraticCurveTo(34, 20, 8, 48); g.stroke();
+    }
+    g.restore();
+  }
+
+  function streetRainMarkup() {
+    let h = '';
+    for (let i = 0; i < 72; i++) {
+      const left = (i * 37 + 13) % 100;
+      const delay = (-(i % 19) * 0.17).toFixed(2);
+      const dur = (0.72 + (i % 8) * 0.1).toFixed(2);
+      const hgt = 24 + (i % 9) * 5;
+      const op = (0.13 + (i % 6) * 0.035).toFixed(2);
+      h += '<i style="left:' + left + '%;animation-delay:' + delay + 's;animation-duration:' + dur + 's;height:' + hgt + 'px;opacity:' + op + '"></i>';
+    }
+    return h;
+  }
+
+  function streetPropsMarkup() {
+    return '<div class="street-props">' +
+      '<div class="street-puddle p1"></div><div class="street-puddle p2"></div><div class="street-puddle p3"></div>' +
+      '<div class="street-crate c1"></div><div class="street-crate c2"></div>' +
+      '<div class="street-barrel b1"></div><div class="street-barrel b2"></div>' +
+      '<div class="street-cat"><i></i></div>' +
+      '<div class="street-string"><i></i><i></i><i></i><i></i><i></i></div>' +
+      '</div>';
+  }
+
   function renderHub() {
     const char = state.char || EXP.CHARACTERS[0];
     const line = LINES[char.id] || LINES.lady;
@@ -9946,7 +10515,7 @@ body.campaign-open { overflow: hidden; }
     const rogueSealed = !!state.seals.rogue;
     const shopInn = '<button type="button" class="street-shop shop-inn' + (rogueSealed ? ' sealed' : '') + '" data-action="rogue" data-x="' + (xs[4] + 120) + '" data-title="永不停席的宴会" style="left:' + xs[4] + 'px">' +
       '<span class="shop-roof"></span><span class="shop-chimney"></span>' +
-      '<span class="shop-body"><span class="shop-beams"></span>' +
+      '<span class="shop-body"><span class="shop-beams"></span><span class="shop-awning"></span>' +
       '<span class="shop-window window-a"></span><span class="shop-window window-b"></span>' +
       '<span class="shop-sign"><em>V</em><b>永不停席的宴会</b><small>THE BANQUET</small></span>' +
       '<span class="shop-door"><i></i></span><span class="shop-step"></span></span>' +
@@ -9969,7 +10538,13 @@ body.campaign-open { overflow: hidden; }
           '<div class="street-far"></div><div class="street-road"></div>' +
           shops + shopInn + gate +
           '<div class="street-lamp" style="left:280px"><i></i></div><div class="street-lamp" style="left:800px"><i></i></div><div class="street-lamp" style="left:1320px"><i></i></div>' +
-          '<div class="street-player" id="street-player" style="transform:translate3d(' + (streetX - 60) + 'px,0,0)"><span class="street-shadow"></span><canvas id="street-avatar" width="120" height="170"></canvas><span class="player-label">' + escHtml(char.name) + '</span></div>' +
+          streetPropsMarkup() +
+          '<div class="street-player" id="street-player" style="transform:translate3d(' + (streetX - 75) + 'px,0,0)"><span class="street-shadow"></span><canvas id="street-avatar" width="300" height="430"></canvas><span class="player-label">' + escHtml(char.name) + '</span></div>' +
+        '</div>' +
+        '<div class="street-weather">' +
+          '<div class="street-rain">' + streetRainMarkup() + '</div>' +
+          '<div class="street-mist mist-a"></div><div class="street-mist mist-b"></div>' +
+          '<div class="street-lightning"></div>' +
         '</div></div>' +
         '<div class="street-bottom"><span class="street-hint">A / D 行走 · E 进入门店 · 也可以直接点击门店</span><div class="street-actions"><button type="button" class="c-btn" data-action="roster">更衣 <span class="en">CHANGE</span></button><button type="button" class="c-btn" data-action="title">回标题 <span class="en">TITLE</span></button></div></div>' +
         '<button type="button" class="street-move left" data-street-move="left" aria-label="向左走">‹</button>' +
