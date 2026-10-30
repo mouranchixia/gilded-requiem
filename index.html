@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no, maximum-scale=1.0">
 <title>黑金挽歌 · GILDED REQUIEM</title>
 <style>
 /* ============================================================
@@ -2074,7 +2074,8 @@ body.mobile #stage {
 body.mobile #game {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  /* iPhone 17 Pro Max 等 19.5:9 屏幕：铺满视口，只裁掉竞技场外的装饰边缘 */
+  object-fit: cover;
 }
 body.mobile #ui { width: 100%; height: 100%; }
 body.mobile #hud { display: none; }
@@ -2702,7 +2703,603 @@ body.mobile.portrait #rotate-hint { display: flex; }
 }
 body.mobile .cinema-caption { font-size: 14px; }
 
+/* ============================================================
+   GILDED REQUIEM — THE LONG NIGHT
+   Campaign hub + four deduction rooms
+   ============================================================ */
+
+:root {
+  --cmp-ink: #060508;
+  --cmp-panel: #0c0a0d;
+  --cmp-panel-2: #120e12;
+  --cmp-gold: #c9a45c;
+  --cmp-gold-hi: #edcf8e;
+  --cmp-ivory: #e8ddc4;
+  --cmp-dim: #9c9078;
+  --cmp-emerald: #4c8b76;
+  --cmp-wine: #7e2733;
+  --cmp-line: rgba(201, 164, 92, 0.22);
+}
+
+.campaign-root {
+  position: fixed;
+  inset: 0;
+  z-index: 520;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(201, 164, 92, 0.10), transparent 55%),
+    radial-gradient(ellipse at 50% 100%, rgba(126, 39, 51, 0.12), transparent 60%),
+    #030305;
+  color: var(--cmp-ivory);
+  font-family: "Songti SC", "STSong", "SimSun", "Noto Serif SC", serif;
+  overflow: auto;
+}
+.campaign-root.on { display: flex; }
+body.campaign-open { overflow: hidden; }
+
+.campaign-shell {
+  width: min(1180px, 96vw);
+  max-height: 94vh;
+  overflow: auto;
+  border: 1px solid rgba(201, 164, 92, 0.34);
+  background:
+    linear-gradient(135deg, rgba(201, 164, 92, 0.045), transparent 34%),
+    linear-gradient(180deg, #0d0b0e, #07060a 70%);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.8), 0 30px 90px rgba(0, 0, 0, 0.75);
+  padding: 24px 28px 18px;
+  position: relative;
+}
+.campaign-shell::before,
+.campaign-shell::after {
+  content: "";
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border-color: rgba(201, 164, 92, 0.55);
+  border-style: solid;
+  pointer-events: none;
+}
+.campaign-shell::before { top: 9px; left: 9px; border-width: 1px 0 0 1px; }
+.campaign-shell::after { bottom: 9px; right: 9px; border-width: 0 1px 1px 0; }
+
+.campaign-head { text-align: center; padding: 2px 0 18px; border-bottom: 1px solid var(--cmp-line); }
+.campaign-kicker,
+.case-kicker {
+  color: var(--cmp-gold);
+  font-family: "Bodoni MT", "Didot", "Times New Roman", serif;
+  font-size: 10px;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+}
+.campaign-title {
+  margin: 8px 0 4px;
+  color: var(--cmp-gold-hi);
+  font-size: clamp(28px, 4.2vw, 46px);
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  line-height: 1.1;
+}
+.campaign-sub {
+  color: var(--cmp-dim);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+.campaign-topline {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--cmp-dim);
+  font-family: "Bodoni MT", "Didot", serif;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+}
+.campaign-body {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 24px;
+  padding: 20px 0 12px;
+}
+.campaign-aside {
+  border: 1px solid var(--cmp-line);
+  background: linear-gradient(180deg, rgba(201, 164, 92, 0.045), transparent 60%);
+  padding: 18px 16px;
+  align-self: start;
+}
+.campaign-aside .sigil {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 10px;
+  border: 1px solid var(--cmp-gold);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--cmp-gold-hi);
+  font-size: 26px;
+  box-shadow: 0 0 26px rgba(201, 164, 92, 0.16) inset;
+}
+.campaign-aside h2 { margin: 6px 0 2px; text-align: center; font-size: 22px; letter-spacing: 0.1em; }
+.campaign-aside .en { text-align: center; color: var(--cmp-dim); font-size: 9px; letter-spacing: 0.26em; }
+.campaign-aside p { color: #b9ad95; font-size: 12px; line-height: 1.75; margin: 12px 0 0; }
+.campaign-aside .line-tag {
+  margin-top: 14px;
+  padding-top: 11px;
+  border-top: 1px solid var(--cmp-line);
+  color: var(--cmp-gold);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.room-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.room-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: 116px;
+  padding: 13px 14px 11px;
+  text-align: left;
+  color: var(--cmp-ivory);
+  background: linear-gradient(145deg, rgba(201, 164, 92, 0.045), rgba(0, 0, 0, 0.2));
+  border: 1px solid rgba(201, 164, 92, 0.22);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+.room-card:hover { border-color: rgba(201, 164, 92, 0.65); background: rgba(201, 164, 92, 0.07); transform: translateY(-1px); }
+.room-card.sealed { border-color: rgba(76, 139, 118, 0.5); }
+.room-card .room-num {
+  position: absolute;
+  right: 12px;
+  top: 9px;
+  color: var(--cmp-gold);
+  font-family: "Bodoni MT", "Didot", serif;
+  font-size: 13px;
+}
+.room-card .room-kicker {
+  color: var(--cmp-dim);
+  font-family: "Bodoni MT", "Didot", serif;
+  font-size: 8px;
+  letter-spacing: 0.24em;
+}
+.room-card h3 { margin: 5px 0 4px; font-size: 19px; font-weight: 500; letter-spacing: 0.06em; color: var(--cmp-gold-hi); }
+.room-card p { margin: 0; color: #9f947f; font-size: 11px; line-height: 1.55; max-width: 88%; }
+.room-card .room-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 7px;
+  color: var(--cmp-gold);
+  font-family: "Bodoni MT", "Didot", serif;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+}
+.room-card .seal {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 1px solid rgba(201, 164, 92, 0.5);
+  border-radius: 50%;
+  text-align: center;
+  line-height: 14px;
+  font-size: 9px;
+  color: var(--cmp-gold);
+}
+.room-card.sealed .seal { border-color: var(--cmp-emerald); color: #a8e0cb; background: rgba(76, 139, 118, 0.18); }
+.room-card.rogue { grid-column: span 2; min-height: 98px; }
+.room-card.rogue h3 { font-size: 21px; }
+
+.campaign-lines {
+  margin-top: 16px;
+  padding-top: 13px;
+  border-top: 1px solid var(--cmp-line);
+}
+.campaign-lines .label {
+  color: var(--cmp-dim);
+  font-family: "Bodoni MT", "Didot", serif;
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  margin-bottom: 8px;
+}
+.line-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.line-pill {
+  border: 1px solid rgba(201, 164, 92, 0.18);
+  color: #9f947f;
+  font-size: 10px;
+  padding: 4px 8px;
+  letter-spacing: 0.06em;
+}
+.line-pill.active { border-color: var(--cmp-gold); color: var(--cmp-gold-hi); background: rgba(201, 164, 92, 0.08); }
+.line-pill em { color: var(--cmp-gold); font-style: normal; margin-right: 4px; }
+
+.campaign-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--cmp-line);
+}
+.campaign-foot .hint { color: var(--cmp-dim); font-size: 10px; letter-spacing: 0.08em; }
+.campaign-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.c-btn {
+  border: 1px solid rgba(201, 164, 92, 0.42);
+  background: transparent;
+  color: var(--cmp-gold-hi);
+  padding: 9px 15px;
+  font-family: inherit;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, opacity 0.2s;
+}
+.c-btn:hover { background: rgba(201, 164, 92, 0.10); border-color: var(--cmp-gold); }
+.c-btn.primary { background: rgba(201, 164, 92, 0.13); border-color: var(--cmp-gold); }
+.c-btn:disabled { opacity: 0.38; cursor: not-allowed; }
+.c-btn .en { margin-left: 8px; font-family: "Bodoni MT", "Didot", serif; font-size: 9px; letter-spacing: 0.16em; color: var(--cmp-dim); }
+
+/* ---------------------------- case shell ---------------------------- */
+.case-shell { width: min(1040px, 96vw); }
+.case-head { text-align: center; padding-bottom: 14px; border-bottom: 1px solid var(--cmp-line); position: relative; }
+.case-head .back {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border: 0;
+  background: transparent;
+  color: var(--cmp-dim);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+}
+.case-head .back:hover { color: var(--cmp-gold-hi); }
+.case-title { margin: 6px 0 2px; font-size: clamp(24px, 3.2vw, 34px); color: var(--cmp-gold-hi); font-weight: 500; letter-spacing: 0.12em; }
+.case-en { color: var(--cmp-dim); font-family: "Bodoni MT", "Didot", serif; font-size: 9px; letter-spacing: 0.28em; }
+.case-sub { color: #b9ad95; font-size: 12px; line-height: 1.6; margin: 8px auto 0; max-width: 720px; }
+
+.case-body { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 18px; padding: 16px 0 14px; }
+.case-brief { border: 1px solid var(--cmp-line); padding: 14px; background: rgba(0, 0, 0, 0.14); }
+.case-brief h4,
+.case-work h4 { margin: 0 0 9px; color: var(--cmp-gold); font-family: "Bodoni MT", "Didot", serif; font-size: 10px; letter-spacing: 0.2em; font-weight: 400; }
+.case-brief p { color: #b6aa93; font-size: 12px; line-height: 1.75; margin: 0 0 9px; }
+.case-clues { margin: 0; padding: 0; list-style: none; }
+.case-clues li { border-top: 1px solid rgba(201, 164, 92, 0.12); padding: 8px 0 8px 17px; position: relative; color: #c9bda6; font-size: 12px; line-height: 1.65; }
+.case-clues li::before { content: "◆"; position: absolute; left: 0; top: 9px; color: var(--cmp-gold); font-size: 8px; }
+.case-work { border: 1px solid rgba(201, 164, 92, 0.26); padding: 14px; background: rgba(201, 164, 92, 0.025); min-height: 300px; }
+.case-note { color: var(--cmp-dim); font-size: 10px; line-height: 1.6; margin: 8px 0 0; }
+.case-message { min-height: 18px; margin-top: 10px; font-size: 11px; color: var(--cmp-gold-hi); letter-spacing: 0.04em; }
+.case-message.bad { color: #e08a8a; }
+.case-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+/* case 1: table */
+.seat-table { position: relative; width: min(380px, 100%); aspect-ratio: 1; margin: 4px auto 0; }
+.seat-table::before {
+  content: "";
+  position: absolute;
+  left: 21%;
+  top: 21%;
+  width: 58%;
+  height: 58%;
+  border: 1px solid rgba(201, 164, 92, 0.36);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201, 164, 92, 0.07), transparent 70%);
+}
+.seat-table::after {
+  content: "钟";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(201, 164, 92, 0.45);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+}
+.seat {
+  position: absolute;
+  width: 96px;
+  padding: 8px 6px;
+  border: 1px solid rgba(201, 164, 92, 0.35);
+  background: #0b090d;
+  color: var(--cmp-ivory);
+  cursor: pointer;
+  text-align: center;
+  transform: translate(-50%, -50%);
+  transition: border-color 0.2s, background 0.2s;
+}
+.seat:hover { border-color: var(--cmp-gold); background: rgba(201, 164, 92, 0.08); }
+.seat small { display: block; color: var(--cmp-dim); font-size: 8px; letter-spacing: 0.18em; }
+.seat b { display: block; margin-top: 2px; font-size: 13px; font-weight: 500; color: var(--cmp-gold-hi); }
+.seat.seat-n { left: 50%; top: 8%; }
+.seat.seat-e { left: 88%; top: 50%; }
+.seat.seat-s { left: 50%; top: 92%; }
+.seat.seat-w { left: 12%; top: 50%; }
+.seat .cycle { display: block; margin-top: 4px; color: var(--cmp-dim); font-size: 8px; }
+
+/* case 2: clock + strips */
+.case-clock {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  margin: 6px auto 12px;
+  border: 1px solid rgba(201, 164, 92, 0.4);
+  border-radius: 50%;
+}
+.case-clock::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2px;
+  height: 62px;
+  background: linear-gradient(180deg, var(--cmp-gold-hi), rgba(201, 164, 92, 0.15));
+  transform-origin: 50% 100%;
+  transform: translate(-50%, -100%) rotate(var(--hand, 0deg));
+  transition: transform 0.4s ease;
+}
+.case-clock::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cmp-gold);
+  transform: translate(-50%, -50%);
+}
+.time-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.time-btn {
+  border: 1px solid rgba(201, 164, 92, 0.24);
+  background: transparent;
+  color: #c9bda6;
+  padding: 8px;
+  font-family: "Bodoni MT", "Didot", serif;
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+}
+.time-btn:hover { border-color: var(--cmp-gold); }
+.time-btn.selected { border-color: var(--cmp-gold); color: var(--cmp-gold-hi); background: rgba(201, 164, 92, 0.10); }
+
+.event-list { display: grid; gap: 6px; margin-top: 10px; }
+.event-row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 42px;
+  gap: 7px;
+  align-items: center;
+  border: 1px solid rgba(201, 164, 92, 0.18);
+  padding: 6px 7px;
+  background: rgba(0, 0, 0, 0.12);
+}
+.event-row .idx { color: var(--cmp-gold); font-family: "Bodoni MT", "Didot", serif; font-size: 12px; text-align: center; }
+.event-row p { margin: 0; color: #c3b69e; font-size: 11px; line-height: 1.5; }
+.event-row .ev-time { color: var(--cmp-dim); font-family: "Bodoni MT", "Didot", serif; font-size: 10px; }
+.event-row .move { display: flex; gap: 3px; }
+.event-row .move button {
+  flex: 1;
+  border: 1px solid rgba(201, 164, 92, 0.3);
+  background: transparent;
+  color: var(--cmp-gold);
+  cursor: pointer;
+  font-size: 10px;
+  line-height: 1.7;
+}
+.event-row .move button:hover { background: rgba(201, 164, 92, 0.12); }
+
+/* case 3: mirrors */
+.mirror-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mirror-room {
+  position: relative;
+  aspect-ratio: 1 / 1.12;
+  border: 1px solid rgba(201, 164, 92, 0.34);
+  background:
+    linear-gradient(180deg, rgba(201, 164, 92, 0.08), transparent 42%),
+    repeating-linear-gradient(90deg, rgba(201, 164, 92, 0.05) 0 1px, transparent 1px 28px),
+    #0a080c;
+  overflow: hidden;
+}
+.mirror-room .room-label { position: absolute; left: 8px; top: 6px; color: var(--cmp-dim); font-family: "Bodoni MT", "Didot", serif; font-size: 8px; letter-spacing: 0.18em; }
+.mirror-room .arch {
+  position: absolute; left: 12%; right: 12%; bottom: 11%; height: 56%;
+  border: 1px solid rgba(201, 164, 92, 0.3); border-bottom: 0;
+  border-radius: 50% 50% 0 0;
+}
+.mirror-room .candle { position: absolute; bottom: 36%; width: 3px; height: 22px; background: #d9c9a5; }
+.mirror-room .candle::before { content: ""; position: absolute; left: -2px; top: -5px; width: 7px; height: 7px; border-radius: 50% 50% 45% 45%; background: var(--cmp-gold-hi); box-shadow: 0 0 10px rgba(237, 207, 142, 0.6); }
+.mirror-room .candle.c1 { left: 26%; }
+.mirror-room .candle.c2 { left: 47%; }
+.mirror-room .candle.c3 { left: 68%; }
+.mirror-room .candle.c4 { left: 86%; display: none; }
+.mirror-room.mirror .candle.c4 { display: block; }
+.portrait {
+  position: absolute; left: 38%; top: 20%; width: 24%; height: 24%;
+  border: 1px solid rgba(201, 164, 92, 0.4); background: #09070a;
+}
+.portrait::before { content: ""; position: absolute; left: 34%; top: 26%; width: 32%; height: 36%; border: 1px solid rgba(201, 164, 92, 0.55); border-radius: 50% 50% 44% 44%; }
+.portrait .eyes { position: absolute; left: 39%; top: 37%; width: 22%; display: flex; justify-content: space-between; }
+.portrait .eyes i { width: 4px; height: 2px; background: var(--cmp-gold-hi); display: block; opacity: 0; }
+.mirror-room.mirror .portrait .eyes i { opacity: 1; }
+.chair { position: absolute; left: 42%; bottom: 13%; width: 20%; height: 15%; border: 1px solid rgba(201, 164, 92, 0.35); border-top: 0; }
+.chair::before { content: ""; position: absolute; left: -10%; top: -20%; width: 120%; height: 22%; border: 1px solid rgba(201, 164, 92, 0.35); }
+.glove { position: absolute; left: 57%; bottom: 19%; width: 13%; height: 7%; border: 1px solid rgba(232, 221, 196, 0.7); border-radius: 50% 50% 40% 40%; transform: rotate(-18deg); opacity: 0; }
+.mirror-room.mirror .glove { opacity: 1; }
+.hotspot {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border: 1px dashed rgba(237, 207, 142, 0.22);
+  border-radius: 50%;
+  background: transparent;
+  color: transparent;
+  cursor: pointer;
+  z-index: 2;
+}
+.hotspot:hover { border-color: var(--cmp-gold-hi); background: rgba(237, 207, 142, 0.08); }
+.hotspot.found { border-color: rgba(76, 139, 118, 0.65); background: rgba(76, 139, 118, 0.12); }
+.hotspot[data-diff="candle"] { left: 83%; top: 31%; }
+.hotspot[data-diff="portrait"] { left: 50%; top: 32%; }
+.hotspot[data-diff="glove"] { left: 63%; top: 78%; }
+.found-list { list-style: none; margin: 10px 0 0; padding: 0; }
+.found-list li { color: #a8e0cb; font-size: 11px; line-height: 1.7; padding-left: 13px; position: relative; }
+.found-list li::before { content: "◈"; position: absolute; left: 0; color: var(--cmp-emerald); }
+
+/* case 4: strips */
+.acrostic { text-align: center; color: var(--cmp-gold-hi); font-family: "Bodoni MT", "Didot", serif; font-size: 22px; letter-spacing: 0.4em; min-height: 30px; margin: 4px 0 10px; }
+.strip-list { display: grid; gap: 5px; }
+.strip-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 42px;
+  gap: 7px;
+  align-items: center;
+  border: 1px solid rgba(201, 164, 92, 0.2);
+  padding: 6px;
+  background: rgba(0, 0, 0, 0.12);
+}
+.strip-row .letter { color: var(--cmp-gold-hi); font-family: "Bodoni MT", "Didot", serif; font-size: 18px; text-align: center; }
+.strip-row p { margin: 0; color: #c3b69e; font-size: 11px; line-height: 1.5; }
+.strip-row .move { display: flex; gap: 3px; }
+.strip-row .move button { flex: 1; border: 1px solid rgba(201, 164, 92, 0.3); background: transparent; color: var(--cmp-gold); cursor: pointer; font-size: 10px; line-height: 1.7; }
+
+.choice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
+.choice-btn {
+  border: 1px solid rgba(201, 164, 92, 0.24);
+  background: transparent;
+  color: #c9bda6;
+  padding: 9px;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+}
+.choice-btn:hover { border-color: var(--cmp-gold); }
+.choice-btn.selected { border-color: var(--cmp-gold); color: var(--cmp-gold-hi); background: rgba(201, 164, 92, 0.10); }
+
+/* verdict */
+.case-verdict {
+  text-align: center;
+  padding: 38px 20px 24px;
+  border: 1px solid rgba(201, 164, 92, 0.35);
+  background: radial-gradient(circle at 50% 30%, rgba(201, 164, 92, 0.11), transparent 60%);
+}
+.seal-stamp {
+  width: 92px;
+  height: 92px;
+  margin: 0 auto 18px;
+  border: 2px solid var(--cmp-gold);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--cmp-gold-hi);
+  font-size: 30px;
+  box-shadow: 0 0 0 5px rgba(201, 164, 92, 0.08), 0 0 50px rgba(201, 164, 92, 0.18);
+  animation: sealIn 0.7s ease both;
+}
+@keyframes sealIn { from { transform: scale(1.5) rotate(-12deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } }
+.case-verdict h2 { margin: 0 0 5px; color: var(--cmp-gold-hi); font-size: 28px; font-weight: 500; letter-spacing: 0.12em; }
+.case-verdict .verdict-en { color: var(--cmp-dim); font-family: "Bodoni MT", "Didot", serif; font-size: 9px; letter-spacing: 0.26em; }
+.case-verdict p { max-width: 560px; margin: 14px auto 0; color: #c9bda6; font-size: 13px; line-height: 1.9; }
+.case-verdict .case-actions { justify-content: center; }
+
+/* finale */
+.finale-shell { text-align: center; }
+.finale-shell .line-index { color: var(--cmp-gold); font-family: "Bodoni MT", "Didot", serif; font-size: 11px; letter-spacing: 0.3em; }
+.finale-shell h1 { margin: 10px 0 3px; color: var(--cmp-gold-hi); font-size: clamp(28px, 4vw, 42px); font-weight: 500; letter-spacing: 0.14em; }
+.finale-shell .finale-en { color: var(--cmp-dim); font-family: "Bodoni MT", "Didot", serif; font-size: 10px; letter-spacing: 0.28em; }
+.finale-shell .finale-text { max-width: 760px; margin: 18px auto 0; color: #c9bda6; font-size: 13px; line-height: 2; text-align: left; }
+.finale-shell .finale-seals { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin: 18px 0; }
+.finale-shell .finale-seals span { border: 1px solid rgba(201, 164, 92, 0.25); padding: 5px 9px; color: var(--cmp-gold); font-size: 9px; letter-spacing: 0.08em; }
+
+/* victory return */
+.campaign-return {
+  position: fixed;
+  right: 18px;
+  top: 18px;
+  z-index: 520;
+  border: 1px solid var(--cmp-gold);
+  background: rgba(8, 6, 10, 0.92);
+  color: var(--cmp-gold-hi);
+  padding: 9px 14px;
+  font-family: inherit;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+}
+
+/* ---------------------------- mobile scroll & actions ---------------------------- */
+@media (max-width: 860px) {
+  .campaign-root { -webkit-overflow-scrolling: touch; }
+  .campaign-shell { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+  .campaign-foot,
+  .case-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 6;
+    background: linear-gradient(180deg, rgba(7, 6, 10, 0.15), #07060a 38%);
+    padding: 8px 0 max(10px, env(safe-area-inset-bottom));
+  }
+  .campaign-foot { margin-top: 4px; }
+  .case-actions { margin-top: 0; }
+}
+
+/* ---------------------------- responsive ---------------------------- */
+@media (max-width: 860px) {
+  .campaign-root { padding: 0; align-items: stretch; }
+  .campaign-shell { width: 100%; max-height: none; min-height: 100%; border: 0; padding: 16px 14px 12px; }
+  .campaign-shell::before, .campaign-shell::after { display: none; }
+  .campaign-body { grid-template-columns: 1fr; gap: 12px; padding-top: 12px; }
+  .campaign-aside { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 8px 12px; align-items: center; padding: 10px 12px; }
+  .campaign-aside .sigil { width: 42px; height: 42px; margin: 0; font-size: 18px; grid-row: span 2; }
+  .campaign-aside h2 { text-align: left; margin: 0; font-size: 18px; }
+  .campaign-aside .en { text-align: left; }
+  .campaign-aside p { grid-column: 1 / -1; margin: 2px 0 0; font-size: 11px; line-height: 1.55; }
+  .campaign-aside .line-tag { grid-column: 1 / -1; margin-top: 4px; padding-top: 6px; text-align: left; font-size: 10px; }
+  .room-grid { grid-template-columns: 1fr; gap: 7px; }
+  .room-card { min-height: 92px; padding: 10px 12px; }
+  .room-card.rogue { grid-column: auto; }
+  .room-card h3 { font-size: 17px; }
+  .room-card p { font-size: 10px; max-width: 94%; }
+  .campaign-lines { margin-top: 10px; }
+  .line-pills { gap: 4px; }
+  .line-pill { font-size: 9px; padding: 3px 6px; }
+  .campaign-foot { flex-direction: column; align-items: stretch; }
+  .campaign-actions { justify-content: stretch; }
+  .campaign-actions .c-btn { flex: 1; }
+  .case-body { grid-template-columns: 1fr; gap: 10px; padding-top: 10px; }
+  .case-brief, .case-work { padding: 10px; }
+  .case-brief p { font-size: 11px; }
+  .case-clues li { font-size: 11px; padding-top: 6px; padding-bottom: 6px; }
+  .seat-table { width: min(300px, 100%); }
+  .seat { width: 82px; padding: 6px 4px; }
+  .seat b { font-size: 11px; }
+  .mirror-pair { gap: 6px; }
+  .mirror-room { aspect-ratio: 1 / 1.2; }
+  .mirror-room .room-label { font-size: 7px; }
+  .case-title { font-size: 24px; }
+  .case-sub { font-size: 11px; }
+  .campaign-return { top: auto; bottom: 12px; right: 50%; transform: translateX(50%); }
+}
+
+@media (max-width: 520px) {
+  .campaign-title { font-size: 26px; }
+  .campaign-sub { font-size: 10px; }
+  .campaign-topline { font-size: 8px; letter-spacing: 0.14em; }
+  .room-grid { gap: 6px; }
+  .line-pill { font-size: 8px; }
+  .case-head .back { position: static; margin-bottom: 6px; }
+  .time-grid { gap: 4px; }
+  .time-btn { font-size: 12px; padding: 7px 4px; }
+  .choice-grid { grid-template-columns: 1fr; }
+  .event-row { grid-template-columns: 30px minmax(0, 1fr) 36px; }
+  .event-row p { font-size: 10px; }
+  .strip-row { grid-template-columns: 22px minmax(0, 1fr) 36px; }
+  .strip-row p { font-size: 10px; }
+  .strip-row .letter { font-size: 15px; }
+}
+
 </style>
+<link rel="stylesheet" href="css/campaign.css">
 </head>
 <body class="title-mode">
 <div id="stage">
@@ -8271,6 +8868,773 @@ body.mobile .cinema-caption { font-size: 14px; }
 </script>
 <script>
 /* ============================================================
+   GILDED REQUIEM — THE LONG NIGHT
+   A five-room campaign:
+   four deduction rooms + the roguelike banquet.
+   Character choice happens once, before the whole night.
+   ============================================================ */
+(function () {
+  'use strict';
+
+  const C = window.CEN;
+  if (!C || !C.exp) return;
+  const EXP = C.exp;
+  const KEY = 'gilded-requiem-campaign-v2';
+
+  const CASES = [
+    {
+      id: 'chair',
+      numeral: 'I',
+      kicker: 'THE DINING ROOM',
+      title: '第四把椅子',
+      en: 'THE FOURTH CHAIR',
+      sub: '四个人，四把椅子，一张永远等不到开席的桌子。',
+      seal: '北位的黑手套',
+      brief: '晚宴开始前，侍者在餐厅发现四把椅子都坐满了，却没有一个人动过刀叉。桌上的座次牌被换过。你要在他们再次举杯之前，把四个人放回原位。',
+      clues: [
+        '北位（背对钟）的人穿黑；医生今晚穿黑。',
+        '伯爵坐在医生正对面。',
+        '少校坐在东位。',
+        '女伶不坐南位。'
+      ],
+      verdict: '北位是医生。第四把椅子从来不是空的——它只是留给最后一个走进餐厅的人。',
+      verdictEn: 'THE FOURTH CHAIR WAS NEVER EMPTY.'
+    },
+    {
+      id: 'clock',
+      numeral: 'II',
+      kicker: 'THE CLOCK ROOM',
+      title: '停摆的钟',
+      en: 'THE STOPPED CLOCK',
+      sub: '钟停在 23:40。但死亡比钟慢，还是比钟快？',
+      seal: '停摆的秒针',
+      brief: '大厅的钟停在 23:40。四个人的证词像四枚齿轮，只有排成正确的时间线，钟才会重新走一秒。',
+      clues: [
+        '23:10，女伶听见楼上传来玻璃碎裂声。',
+        '23:20，医生离开房间，乘电梯下楼；电梯到大厅需要 4 分钟。',
+        '23:40，大厅的钟停摆。',
+        '死亡发生在钟停摆前 10 分钟；医生到大厅时，死者还活着。'
+      ],
+      verdict: '死亡时间不是钟停的那一刻，而是 23:30。钟只是最后一个说谎的证人。',
+      verdictEn: 'DEATH ARRIVED TEN MINUTES BEFORE THE CLOCK.'
+    },
+    {
+      id: 'mirror',
+      numeral: 'III',
+      kicker: 'THE MIRROR GALLERY',
+      title: '镜中第三个人',
+      en: 'THE THIRD IN THE MIRROR',
+      sub: '镜厅里只有两个人。镜子里却有三道呼吸。',
+      seal: '裂开的镜片',
+      brief: '镜厅只点三支蜡烛，镜中却亮着四支。侍者说，镜子里多出来的那个人，一直站在你身后。找出三处不对，再回答：镜中的第三个人是谁？',
+      clues: [
+        '先找出镜中三处不属于现实的细节。',
+        '每一处异常都会留下一句线索。',
+        '三处都找到后，再指认镜中多出来的人。'
+      ],
+      verdict: '镜中多出来的人是你。你一直站在镜外，而镜中的无名者替你赴了这场宴。',
+      verdictEn: 'THE THIRD REFLECTION WAS YOURS.'
+    },
+    {
+      id: 'will',
+      numeral: 'IV',
+      kicker: 'THE READING ROOM',
+      title: '遗嘱的裂缝',
+      en: 'THE CRACKED WILL',
+      sub: '六段遗嘱，六个首字母。死人把答案藏在自己的名字里。',
+      seal: '拼合的遗嘱',
+      brief: '遗嘱被撕成六段。死者生前有一个习惯：把最重要的一句放在最前面，让每段首字母拼成一个词。拼好它，再决定谁有资格继承这场长夜。',
+      clues: [
+        '六段文字要按正确顺序拼合。',
+        '每段开头的字母会拼出一个英文单词。',
+        '拼出词之后，再从四个继承人里选一个。'
+      ],
+      verdict: '六段首字母拼出 MIRROR。遗嘱的继承人是镜中的孩子——不是任何一个活人。',
+      verdictEn: 'THE WILL SPELLED MIRROR.'
+    }
+  ];
+
+  const LINES = {
+    lady: { ending: 'bride', label: 'V', name: '无名者的婚礼', en: 'THE NAMELESS WEDDING' },
+    count: { ending: 'host', label: 'II', name: '新主人', en: 'THE NEW HOST' },
+    valet: { ending: 'mirror', label: 'III', name: '镜中空座', en: 'THE EMPTY SEAT' },
+    diva: { ending: 'dawn', label: 'I', name: '晨光', en: 'MORNING LIGHT' },
+    watchman: { ending: 'seventh', label: 'IV', name: '第七支蜡烛', en: 'THE SEVENTH CANDLE' },
+    tailor: { ending: 'exit', label: 'VI', name: '散场', en: 'THE LAST EXIT' }
+  };
+
+  const GUESTS = {
+    count: { name: '缄默伯爵', note: '黑外套' },
+    major: { name: '退役少校', note: '左手香槟' },
+    doctor: { name: '镜面医生', note: '黑手套' },
+    diva: { name: '苦艾女伶', note: '绿裙' }
+  };
+  const GUEST_ORDER = ['count', 'major', 'doctor', 'diva'];
+  const SEAT_LABELS = {
+    N: '北 · 背对钟',
+    E: '东 · 钟的右手',
+    S: '南',
+    W: '西'
+  };
+  const SEAT_CORRECT = { N: 'doctor', E: 'major', S: 'count', W: 'diva' };
+
+  const EVENTS = [
+    { time: '23:10', text: '女伶在楼上听见玻璃碎裂。' },
+    { time: '23:20', text: '医生离开房间，乘电梯下楼。' },
+    { time: '23:24', text: '医生到达大厅，死者还活着。' },
+    { time: '23:40', text: '大厅的钟停摆。' }
+  ];
+  const TIME_OPTIONS = ['23:15', '23:30', '23:45', '00:00'];
+
+  const DIFFS = {
+    candle: {
+      label: '第四支蜡烛',
+      clue: '镜中多出第四支蜡烛。镜厅里只有三个人，却点了四支蜡烛——镜中多了一道呼吸。'
+    },
+    portrait: {
+      label: '睁眼的肖像',
+      clue: '肖像的眼睛睁着。镜中的画会看人，说明镜里多了一个活人的倒影。'
+    },
+    glove: {
+      label: '椅背上的白手套',
+      clue: '椅背上搭着一只白手套，内衬绣着你的纹章。镜中人多半刚刚离开。'
+    }
+  };
+
+  const STRIPS = [
+    { letter: 'M', text: 'M — 我的镜子只照活人。' },
+    { letter: 'I', text: 'I — 我把名字留给第一个走进镜厅的人。' },
+    { letter: 'R', text: 'R — 若她留下，所有门都会为她打开。' },
+    { letter: 'R', text: 'R — 若她离开，长夜就此散场。' },
+    { letter: 'O', text: 'O — 只有无名者能继承这场宴会。' },
+    { letter: 'R', text: 'R — 遗嘱的最后一页，请交给守夜人。' }
+  ];
+  const WILL_CHOICES = [
+    { id: 'mirror-child', name: '镜中的孩子' },
+    { id: 'lady', name: '无名夫人' },
+    { id: 'count', name: '缄默伯爵' },
+    { id: 'none', name: '无人继承' }
+  ];
+
+  const state = {
+    open: false,
+    view: 'hub',
+    char: null,
+    charId: null,
+    seals: {},
+    caseId: null,
+    caseState: null
+  };
+
+  let root = null;
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function audio(name) {
+    try { C.Audio.play(name); } catch (e) { /* noop */ }
+  }
+
+  function loadSeals() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(KEY) || '{}');
+      return raw && raw.seals && typeof raw.seals === 'object' ? raw.seals : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveCampaign() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify({
+        seals: state.seals,
+        charId: state.charId
+      }));
+    } catch (e) { /* noop */ }
+  }
+
+  function resolveChar(c) {
+    if (!c) return EXP.CHARACTERS[0];
+    if (typeof c === 'string') return EXP.CHAR_MAP[c] || EXP.CHARACTERS[0];
+    return EXP.CHAR_MAP[c.id] || c;
+  }
+
+  function ensureRoot() {
+    if (root) return;
+    root = document.createElement('div');
+    root.id = 'campaign-root';
+    root.className = 'campaign-root';
+    root.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(root);
+    root.addEventListener('click', onClick);
+  }
+
+  function setShell(html, extraClass) {
+    ensureRoot();
+    root.innerHTML = '<div class="campaign-shell ' + (extraClass || '') + '">' + html + '</div>';
+  }
+
+  function openHub(char) {
+    ensureRoot();
+    state.open = true;
+    state.view = 'hub';
+    state.caseId = null;
+    state.caseState = null;
+    state.seals = loadSeals();
+    state.char = resolveChar(char || (state.charId && EXP.CHAR_MAP[state.charId]) || EXP.CHARACTERS[0]);
+    state.charId = state.char.id;
+    saveCampaign();
+    const ret = document.getElementById('campaign-return');
+    if (ret) ret.remove();
+    root.classList.add('on');
+    root.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('campaign-open');
+    renderHub();
+    audio('click');
+  }
+
+  function close() {
+    state.open = false;
+    if (root) {
+      root.classList.remove('on');
+      root.setAttribute('aria-hidden', 'true');
+      root.innerHTML = '';
+    }
+    document.body.classList.remove('campaign-open');
+  }
+
+  function sealCount() {
+    let n = 0;
+    CASES.forEach((c) => { if (state.seals[c.id]) n += 1; });
+    if (state.seals.rogue) n += 1;
+    return n;
+  }
+
+  function allSealed() {
+    return CASES.every((c) => !!state.seals[c.id]) && !!state.seals.rogue;
+  }
+
+  function renderHub() {
+    const char = state.char || EXP.CHARACTERS[0];
+    const line = LINES[char.id] || LINES.lady;
+    const ending = (EXP.ENDINGS && (EXP.ENDINGS[line.ending] || EXP.ENDINGS.bride)) || null;
+    const count = sealCount();
+    const remain = 5 - count;
+    const charLine = ending ? (ending.numeral + ' · ' + ending.name) : (line.label + ' · ' + line.name);
+    const rooms = CASES.map((c) => {
+      const sealed = !!state.seals[c.id];
+      return (
+        '<button type="button" class="room-card' + (sealed ? ' sealed' : '') + '" data-action="case" data-id="' + c.id + '">' +
+          '<span class="room-num">' + c.numeral + '</span>' +
+          '<span class="room-kicker">' + c.kicker + '</span>' +
+          '<h3>' + c.title + '</h3>' +
+          '<p>' + c.sub + '</p>' +
+          '<span class="room-foot"><span>' + (sealed ? '已收下印章' : '进入房间') + '</span>' +
+          '<span class="seal">' + (sealed ? '✓' : '') + '</span></span>' +
+        '</button>'
+      );
+    }).join('');
+    const rogueSealed = !!state.seals.rogue;
+    const pills = EXP.CHARACTERS.map((c) => (
+      '<span class="line-pill' + (c.id === char.id ? ' active' : '') + '">' +
+        '<em>' + c.sigil + '</em>' + c.name +
+      '</span>'
+    )).join('');
+
+    setShell(
+      '<div class="campaign-topline"><span>HÔTEL CENDRES · THE LONG NIGHT</span><span>SEALS ' + count + ' / 5</span></div>' +
+      '<header class="campaign-head">' +
+        '<div class="campaign-kicker">A NIGHT OF FIVE ROOMS · PARIS 1928</div>' +
+        '<h1 class="campaign-title">长夜将尽</h1>' +
+        '<div class="campaign-sub">四场推理，一场宴会。选定的身份会一直留到最后一页。</div>' +
+      '</header>' +
+      '<div class="campaign-body">' +
+        '<aside class="campaign-aside">' +
+          '<div class="sigil">' + (char.sigil || '✦') + '</div>' +
+          '<h2>' + char.name + '</h2>' +
+          '<div class="en">' + char.en + '</div>' +
+          '<p>' + char.role + ' · ' + char.roleEn + '</p>' +
+          '<div class="line-tag">你的命线<br><b>' + charLine + '</b></div>' +
+        '</aside>' +
+        '<main>' +
+          '<div class="room-grid">' + rooms +
+            '<button type="button" class="room-card rogue' + (rogueSealed ? ' sealed' : '') + '" data-action="rogue">' +
+              '<span class="room-num">V</span>' +
+              '<span class="room-kicker">THE BANQUET</span>' +
+              '<h3>永不停席的宴会</h3>' +
+              '<p>五层酒店，一场永不散场的葬礼晚宴。肉鸽战斗、遗物与楼梯门都在这里。' + (rogueSealed ? ' 这场宴会已经落幕。' : ' 这是长夜里唯一会流血的一间房。') + '</p>' +
+              '<span class="room-foot"><span>' + (rogueSealed ? '宴会已落幕' : '进入宴会') + '</span><span class="seal">' + (rogueSealed ? '✓' : '') + '</span></span>' +
+            '</button>' +
+          '</div>' +
+          '<div class="campaign-lines">' +
+            '<div class="label">THE SIX LINES · 六条命线</div>' +
+            '<div class="line-pills">' + pills + '</div>' +
+          '</div>' +
+        '</main>' +
+      '</div>' +
+      '<footer class="campaign-foot">' +
+        '<div class="hint">' + (allSealed() ? '五枚印章已齐。可以宣读终局。' : '还差 ' + remain + ' 枚印章。推理房间与宴会都可以反复进入。') + '</div>' +
+        '<div class="campaign-actions">' +
+          '<button type="button" class="c-btn" data-action="roster">更衣 <span class="en">CHANGE</span></button>' +
+          '<button type="button" class="c-btn" data-action="title">回标题 <span class="en">TITLE</span></button>' +
+          '<button type="button" class="c-btn primary" data-action="final"' + (allSealed() ? '' : ' disabled') + '>宣读终局 <span class="en">THE LAST PAGE</span></button>' +
+        '</div>' +
+      '</footer>'
+    );
+    state.view = 'hub';
+  }
+
+  /* ---------------------------- cases ---------------------------- */
+  function openCase(id) {
+    const c = CASES.filter((x) => x.id === id)[0];
+    if (!c) return;
+    state.view = 'case';
+    state.caseId = id;
+    if (id === 'chair') {
+      state.caseState = {
+        assign: { N: 'count', E: 'diva', S: 'major', W: 'doctor' },
+        message: '',
+        bad: false
+      };
+    } else if (id === 'clock') {
+      state.caseState = {
+        order: [2, 0, 3, 1],
+        time: null,
+        message: '',
+        bad: false
+      };
+    } else if (id === 'mirror') {
+      state.caseState = {
+        found: [],
+        choice: null,
+        message: '',
+        bad: false
+      };
+    } else {
+      state.caseState = {
+        order: [2, 5, 0, 4, 1, 3],
+        choice: null,
+        message: '',
+        bad: false
+      };
+    }
+    renderCase();
+    audio('click');
+  }
+
+  function renderCase() {
+    const c = CASES.filter((x) => x.id === state.caseId)[0];
+    if (!c) { renderHub(); return; }
+    const clues = c.clues.map((x) => '<li>' + x + '</li>').join('');
+    setShell(
+      '<div class="campaign-topline"><span>CASE ' + c.numeral + ' · ' + c.kicker + '</span><span>THE LONG NIGHT</span></div>' +
+      '<header class="case-head">' +
+        '<button type="button" class="back" data-action="hub">← 回到长廊</button>' +
+        '<div class="case-kicker">' + c.kicker + '</div>' +
+        '<h1 class="case-title">' + c.title + '</h1>' +
+        '<div class="case-en">' + c.en + '</div>' +
+        '<p class="case-sub">' + c.sub + '</p>' +
+      '</header>' +
+      '<div class="case-body">' +
+        '<div class="case-brief">' +
+          '<h4>THE BRIEF · 案情</h4>' +
+          '<p>' + c.brief + '</p>' +
+          '<h4>EVIDENCE · 证词</h4>' +
+          '<ul class="case-clues">' + clues + '</ul>' +
+        '</div>' +
+        '<div class="case-work" id="case-work">' + caseBody() + '</div>' +
+      '</div>' +
+      '<footer class="campaign-foot">' +
+        '<div class="case-message ' + (state.caseState.bad ? 'bad' : '') + '" id="case-message">' + state.caseState.message + '</div>' +
+        '<div class="campaign-actions">' +
+          '<button type="button" class="c-btn" data-action="hub">放弃 <span class="en">BACK</span></button>' +
+          '<button type="button" class="c-btn primary" data-action="verify">验证 <span class="en">VERIFY</span></button>' +
+        '</div>' +
+      '</footer>',
+      'case-shell'
+    );
+    state.view = 'case';
+  }
+
+  function refreshCase() {
+    const c = CASES.filter((x) => x.id === state.caseId)[0];
+    if (!c) return;
+    const work = document.getElementById('case-work');
+    const msg = document.getElementById('case-message');
+    if (work) work.innerHTML = caseBody();
+    if (msg) {
+      msg.textContent = state.caseState.message || '';
+      msg.className = 'case-message' + (state.caseState.bad ? ' bad' : '');
+    }
+  }
+
+  function caseBody() {
+    if (state.caseId === 'chair') return chairBody();
+    if (state.caseId === 'clock') return clockBody();
+    if (state.caseId === 'mirror') return mirrorBody();
+    return willBody();
+  }
+
+  function chairBody() {
+    const a = state.caseState.assign;
+    const seats = ['N', 'E', 'S', 'W'].map((s) => (
+      '<button type="button" class="seat seat-' + s.toLowerCase() + '" data-action="seat" data-seat="' + s + '">' +
+        '<small>' + SEAT_LABELS[s] + '</small>' +
+        '<b>' + GUESTS[a[s]].name + '</b>' +
+        '<span class="cycle">' + GUESTS[a[s]].note + ' · 点击换人</span>' +
+      '</button>'
+    )).join('');
+    return (
+      '<h4>THE TABLE · 座次</h4>' +
+      '<div class="seat-table">' + seats + '</div>' +
+      '<p class="case-note">点击任意一把椅子，在四位客人之间切换。北位就是背对钟的那把。</p>'
+    );
+  }
+
+  function clockBody() {
+    const s = state.caseState;
+    const events = s.order.map((idx, pos) => {
+      const e = EVENTS[idx];
+      return (
+        '<div class="event-row">' +
+          '<span class="idx">' + String(pos + 1).padStart(2, '0') + '</span>' +
+          '<p><span class="ev-time">' + e.time + '</span> — ' + e.text + '</p>' +
+          '<span class="move">' +
+            '<button type="button" data-action="event" data-pos="' + pos + '" data-dir="-1" aria-label="上移">↑</button>' +
+            '<button type="button" data-action="event" data-pos="' + pos + '" data-dir="1" aria-label="下移">↓</button>' +
+          '</span>' +
+        '</div>'
+      );
+    }).join('');
+    const deg = s.time ? ((parseInt(s.time.split(':')[0], 10) % 12) * 30 + parseInt(s.time.split(':')[1], 10) * 0.5) : 0;
+    const times = TIME_OPTIONS.map((t) => (
+      '<button type="button" class="time-btn' + (s.time === t ? ' selected' : '') + '" data-action="time" data-time="' + t + '">' + t + '</button>'
+    )).join('');
+    return (
+      '<h4>THE CLOCK · 钟面</h4>' +
+      '<div class="case-clock" style="--hand:' + deg + 'deg"></div>' +
+      '<div class="time-grid">' + times + '</div>' +
+      '<p class="case-note">先排出事件顺序，再选死亡时间。钟只会停在它愿意停的地方。</p>' +
+      '<div class="event-list">' + events + '</div>'
+    );
+  }
+
+  function mirrorBody() {
+    const s = state.caseState;
+    const found = s.found.map((k) => '<li>' + DIFFS[k].clue + '</li>').join('');
+    const hotspots = ['candle', 'portrait', 'glove'].map((k) => (
+      '<button type="button" class="hotspot' + (s.found.indexOf(k) !== -1 ? ' found' : '') + '" data-action="hotspot" data-diff="' + k + '" aria-label="检查异常"></button>'
+    )).join('');
+    const choices = [
+      { id: 'lady', name: '无名者（你）' },
+      { id: 'count', name: '缄默伯爵' },
+      { id: 'diva', name: '苦艾女伶' },
+      { id: 'none', name: '镜中没有人' }
+    ].map((c) => (
+      '<button type="button" class="choice-btn' + (s.choice === c.id ? ' selected' : '') + '" data-action="mchoice" data-id="' + c.id + '">' + c.name + '</button>'
+    )).join('');
+    return (
+      '<h4>THE MIRROR · 镜厅</h4>' +
+      '<div class="mirror-pair">' +
+        '<div class="mirror-room real"><span class="room-label">ROOM · 现实</span><div class="arch"></div><div class="candle c1"></div><div class="candle c2"></div><div class="candle c3"></div><div class="portrait"><span class="eyes"><i></i><i></i></span></div><div class="chair"></div></div>' +
+        '<div class="mirror-room mirror"><span class="room-label">MIRROR · 镜中</span><div class="arch"></div><div class="candle c1"></div><div class="candle c2"></div><div class="candle c3"></div><div class="candle c4"></div><div class="portrait"><span class="eyes"><i></i><i></i></span></div><div class="chair"></div><div class="glove"></div>' + hotspots + '</div>' +
+      '</div>' +
+      '<ul class="found-list">' + found + '</ul>' +
+      (s.found.length === 3 ? '<h4 style="margin-top:14px">THE QUESTION · 指认</h4><div class="choice-grid">' + choices + '</div>' : '<p class="case-note">点击镜中发光的位置，找出三处异常。镜中的东西不会主动开口。</p>')
+    );
+  }
+
+  function willBody() {
+    const s = state.caseState;
+    const acrostic = s.order.map((i) => STRIPS[i].letter).join('');
+    const strips = s.order.map((idx, pos) => (
+      '<div class="strip-row">' +
+        '<span class="letter">' + STRIPS[idx].letter + '</span>' +
+        '<p>' + STRIPS[idx].text + '</p>' +
+        '<span class="move">' +
+          '<button type="button" data-action="strip" data-pos="' + pos + '" data-dir="-1" aria-label="上移">↑</button>' +
+          '<button type="button" data-action="strip" data-pos="' + pos + '" data-dir="1" aria-label="下移">↓</button>' +
+        '</span>' +
+      '</div>'
+    )).join('');
+    const choices = WILL_CHOICES.map((c) => (
+      '<button type="button" class="choice-btn' + (s.choice === c.id ? ' selected' : '') + '" data-action="wchoice" data-id="' + c.id + '">' + c.name + '</button>'
+    )).join('');
+    return (
+      '<h4>THE WILL · 拼合</h4>' +
+      '<div class="acrostic">' + acrostic + '</div>' +
+      '<div class="strip-list">' + strips + '</div>' +
+      '<p class="case-note">把六段遗嘱排成正确的顺序。注意每一段开头的字母。</p>' +
+      '<h4 style="margin-top:14px">THE HEIR · 继承人</h4>' +
+      '<div class="choice-grid">' + choices + '</div>'
+    );
+  }
+
+  function verifyCase() {
+    const s = state.caseState;
+    if (!s) return;
+    s.bad = false;
+    if (state.caseId === 'chair') {
+      const ok = Object.keys(SEAT_CORRECT).every((k) => s.assign[k] === SEAT_CORRECT[k]);
+      if (!ok) {
+        s.message = '椅子还没有安静下来。再看一遍证词：北位穿黑，伯爵在医生对面。';
+        s.bad = true;
+        refreshCase();
+        return;
+      }
+      completeCase('chair');
+      return;
+    }
+    if (state.caseId === 'clock') {
+      if (s.order.join(',') !== '0,1,2,3') {
+        s.message = '时间线断了。先让玻璃碎裂、医生下楼、医生到大厅、钟停摆依次发生。';
+        s.bad = true;
+        refreshCase();
+        return;
+      }
+      if (s.time !== '23:30') {
+        s.message = '顺序对了，但死亡时间不对。钟停摆前 10 分钟，医生到时人还活着。';
+        s.bad = true;
+        refreshCase();
+        return;
+      }
+      completeCase('clock');
+      return;
+    }
+    if (state.caseId === 'mirror') {
+      if (s.found.length < 3) {
+        s.message = '还有异常没有找出来。镜厅里至少有三处不对。';
+        s.bad = true;
+        refreshCase();
+        return;
+      }
+      if (s.choice !== 'lady') {
+        s.message = '镜中多出来的不是死者，也不是侍者。看看那只绣着纹章的白手套。';
+        s.bad = true;
+        refreshCase();
+        return;
+      }
+      completeCase('mirror');
+      return;
+    }
+    if (state.caseId === 'will') {
+      if (s.order.map((i) => STRIPS[i].letter).join('') !== 'MIRROR') {
+        s.message = '遗嘱还是碎的。首字母必须拼出 MIRROR。';
+        s.bad = true;
+        refreshCase();
+        return;
+      }
+      if (s.choice !== 'mirror-child') {
+        s.message = '词拼对了，但继承人不对。遗嘱说的是“镜中的孩子”，不是镜外的任何名字。';
+        s.bad = true;
+        refreshCase();
+        return;
+      }
+      completeCase('will');
+    }
+  }
+
+  function completeCase(id) {
+    const c = CASES.filter((x) => x.id === id)[0];
+    if (!c) return;
+    if (!state.seals[id]) {
+      state.seals[id] = true;
+      saveCampaign();
+    }
+    audio('reward');
+    setShell(
+      '<div class="case-verdict">' +
+        '<div class="seal-stamp">✦</div>' +
+        '<div class="case-kicker">CASE ' + c.numeral + ' · CLOSED</div>' +
+        '<h2>' + c.title + '</h2>' +
+        '<div class="verdict-en">' + c.verdictEn + '</div>' +
+        '<p>' + c.verdict + '</p>' +
+        '<p style="color:var(--cmp-gold);font-size:11px">获得印章 · ' + c.seal + '</p>' +
+        '<div class="case-actions">' +
+          '<button type="button" class="c-btn primary" data-action="hub">收下印章 · 回到长廊 <span class="en">BACK TO THE HALL</span></button>' +
+        '</div>' +
+      '</div>',
+      'case-shell'
+    );
+    state.view = 'verdict';
+  }
+
+  function openFinale() {
+    if (!allSealed()) return;
+    const char = state.char || EXP.CHARACTERS[0];
+    const line = LINES[char.id] || LINES.lady;
+    const e = (EXP.ENDINGS && (EXP.ENDINGS[line.ending] || EXP.ENDINGS.bride)) || null;
+    const text = e && e.text ? e.text.map((p) => '<p>' + p + '</p>').join('') : '<p>长夜在你身后合上了门。</p>';
+    const seals = CASES.map((c) => '<span>✦ ' + c.seal + '</span>').join('') + '<span>✦ 宴会的余烬</span>';
+    setShell(
+      '<div class="finale-shell">' +
+        '<div class="line-index">THE SIXTH NIGHT · LINE ' + (e ? e.numeral : line.label) + '</div>' +
+        '<h1>' + (e ? e.name : line.name) + '</h1>' +
+        '<div class="finale-en">' + (e ? e.en : line.en) + ' · ' + char.name + '</div>' +
+        '<div class="finale-text">' + text + '</div>' +
+        '<div class="finale-seals">' + seals + '</div>' +
+        '<p style="color:var(--cmp-dim);font-size:11px;max-width:640px;margin:0 auto 16px;line-height:1.8">四场推理与一场宴会已经拼成这一夜。你选的身份，决定了最后是谁从这场长夜里走出去。</p>' +
+        '<div class="case-actions" style="justify-content:center">' +
+          '<button type="button" class="c-btn" data-action="hub">再看长廊 <span class="en">HALL</span></button>' +
+          '<button type="button" class="c-btn primary" data-action="title">重开一夜 <span class="en">REOPEN</span></button>' +
+        '</div>' +
+      '</div>'
+    );
+    state.view = 'finale';
+    audio('reward');
+  }
+
+  /* ---------------------------- victory / rogue ---------------------------- */
+  function startRogue() {
+    if (!state.char) return;
+    state.charId = state.char.id;
+    saveCampaign();
+    close();
+    document.dispatchEvent(new CustomEvent('campaign:rogue', { detail: { charId: state.charId } }));
+  }
+
+  function onRogueWin() {
+    if (!state.charId) return;
+    if (!state.seals.rogue) {
+      state.seals.rogue = true;
+      saveCampaign();
+    }
+  }
+
+  function onVictory() {
+    if (!state.charId) return;
+    let btn = document.getElementById('campaign-return');
+    if (btn) return;
+    btn = document.createElement('button');
+    btn.type = 'button';
+    btn.id = 'campaign-return';
+    btn.className = 'campaign-return';
+    btn.textContent = '回到长廊 · THE LONG NIGHT';
+    btn.addEventListener('click', () => {
+      const char = EXP.CHAR_MAP[state.charId] || state.char;
+      openHub(char);
+    });
+    document.body.appendChild(btn);
+  }
+
+  /* ---------------------------- click routing ---------------------------- */
+  function onClick(e) {
+    const el = e.target.closest('[data-action]');
+    if (!el) return;
+    const action = el.getAttribute('data-action');
+    const id = el.getAttribute('data-id');
+    const s = state.caseState;
+    if (action === 'case') { openCase(id); return; }
+    if (action === 'rogue') { startRogue(); return; }
+    if (action === 'hub') { renderHub(); audio('click'); return; }
+    if (action === 'roster') {
+      close();
+      document.dispatchEvent(new CustomEvent('campaign:roster'));
+      return;
+    }
+    if (action === 'title') {
+      close();
+      window.location.reload();
+      return;
+    }
+    if (action === 'final') { openFinale(); return; }
+    if (action === 'verify') { verifyCase(); return; }
+    if (action === 'seat') {
+      if (!s) return;
+      const seat = el.getAttribute('data-seat');
+      const cur = GUEST_ORDER.indexOf(s.assign[seat]);
+      s.assign[seat] = GUEST_ORDER[(cur + 1) % GUEST_ORDER.length];
+      s.message = '';
+      s.bad = false;
+      refreshCase();
+      audio('click');
+      return;
+    }
+    if (action === 'event') {
+      if (!s) return;
+      const pos = parseInt(el.getAttribute('data-pos'), 10);
+      const dir = parseInt(el.getAttribute('data-dir'), 10);
+      const np = pos + dir;
+      if (np < 0 || np >= s.order.length) return;
+      const t = s.order[pos]; s.order[pos] = s.order[np]; s.order[np] = t;
+      s.message = '';
+      s.bad = false;
+      refreshCase();
+      audio('click');
+      return;
+    }
+    if (action === 'time') {
+      if (!s) return;
+      s.time = el.getAttribute('data-time');
+      s.message = '';
+      s.bad = false;
+      refreshCase();
+      audio('click');
+      return;
+    }
+    if (action === 'hotspot') {
+      if (!s) return;
+      const k = el.getAttribute('data-diff');
+      if (s.found.indexOf(k) === -1) {
+        s.found.push(k);
+        s.message = '记录：' + DIFFS[k].label;
+        s.bad = false;
+        audio('reward');
+      } else {
+        s.message = '这处已经记下了。';
+        s.bad = false;
+      }
+      refreshCase();
+      return;
+    }
+    if (action === 'mchoice') {
+      if (!s) return;
+      s.choice = id;
+      s.message = '';
+      s.bad = false;
+      refreshCase();
+      audio('click');
+      return;
+    }
+    if (action === 'strip') {
+      if (!s) return;
+      const pos = parseInt(el.getAttribute('data-pos'), 10);
+      const dir = parseInt(el.getAttribute('data-dir'), 10);
+      const np = pos + dir;
+      if (np < 0 || np >= s.order.length) return;
+      const t = s.order[pos]; s.order[pos] = s.order[np]; s.order[np] = t;
+      s.message = '';
+      s.bad = false;
+      refreshCase();
+      audio('click');
+      return;
+    }
+    if (action === 'wchoice') {
+      if (!s) return;
+      s.choice = id;
+      s.message = '';
+      s.bad = false;
+      refreshCase();
+      audio('click');
+    }
+  }
+
+  C.campaign = {
+    openHub: openHub,
+    close: close,
+    onRogueWin: onRogueWin,
+    onVictory: onVictory,
+    isOpen: function () { return state.open; },
+    cases: CASES
+  };
+})();
+
+</script>
+<script>
+/* ============================================================
    GILDED REQUIEM — game
    A 1920s gothic-deco roguelite. Everything is hand-drawn.
    ============================================================ */
@@ -8889,6 +10253,12 @@ body.mobile .cinema-caption { font-size: 14px; }
   function startSelected() {
     if (S.mode !== 'roster') return;
     S.selectedChar = CHAR_MAP[S.selectedChar.id] || X.CHARACTERS[0];
+    S.campaignActive = false;
+    if (CEN.campaign) {
+      CEN.campaign.openHub(S.selectedChar);
+      audio('start');
+      return;
+    }
     startRun();
     audio('start');
   }
@@ -9604,6 +10974,7 @@ body.mobile .cinema-caption { font-size: 14px; }
     if (S.meta.endings.indexOf(ending.id) === -1) S.meta.endings.push(ending.id);
     saveMeta();
     renderTitleMeta();
+    if (S.campaignActive && CEN.campaign) CEN.campaign.onRogueWin();
     S.mode = 'ending';
     openCinematic('ending', ending);
   }
@@ -9623,6 +10994,7 @@ body.mobile .cinema-caption { font-size: 14px; }
       e.text.map((p) => '<p>' + p + '</p>').join('');
     dom.bossWrap.classList.add('hidden');
     addBurst(S.player.x, S.player.y, P.goldHi, 40);
+    if (S.campaignActive && CEN.campaign) CEN.campaign.onVictory();
   }
 
   function restart() {
@@ -11978,6 +13350,20 @@ body.mobile .cinema-caption { font-size: 14px; }
     X: X,
     chars: X.CHARACTERS
   };
+
+  document.addEventListener('campaign:rogue', function (e) {
+    const id = e.detail && e.detail.charId;
+    const picked = (X.CHARACTERS || []).find(function (c) { return c.id === id; });
+    if (picked) S.selectedChar = picked;
+    S.campaignActive = true;
+    S.meta.seenOpening = true;
+    startRun();
+  });
+
+  document.addEventListener('campaign:roster', function () {
+    S.campaignActive = false;
+    openRoster();
+  });
 
   try {
     init();
