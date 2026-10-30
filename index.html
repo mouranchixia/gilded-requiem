@@ -2456,8 +2456,10 @@ body.mobile .reward-cards {
 body.mobile .relic-card {
   width: 100%;
   min-height: 0;
+  flex: 0 0 auto;
   padding: 9px 11px;
 }
+body.mobile .reward-cards { scrollbar-width: thin; }
 body.mobile .relic-card .card-icon { font-size: 24px; height: 30px; line-height: 30px; }
 body.mobile .relic-card .card-name { font-size: 16px; }
 body.mobile .relic-card .card-en { font-size: 6px; min-height: 8px; }
@@ -2474,6 +2476,68 @@ body.mobile .modal-actions .deco-btn { flex: 1; min-width: 0; padding: 10px 8px;
 body.mobile .stats { grid-template-columns: repeat(3, 1fr); }
 body.mobile .victory-ending { font-size: 10px; }
 body.mobile .victory-ending .ending-name { font-size: 18px; }
+
+/* ---- mobile fit pass: keep action rows reachable and choices visible ---- */
+body.mobile .roster-panel { max-height: 96dvh; padding-bottom: 12px; }
+body.mobile .roster-head::after {
+  content: "向下滑动查看全部六位 · SWIPE TO SEE ALL";
+  display: block;
+  margin-top: 5px;
+  font-family: var(--serif-en);
+  font-size: 7px;
+  letter-spacing: 0.16em;
+  color: rgba(232, 221, 196, 0.38);
+}
+body.mobile .guide-head::after {
+  content: "向下滑动阅读全部规则 · SCROLL FOR ALL RULES";
+  display: block;
+  margin-top: 5px;
+  font-family: var(--serif-en);
+  font-size: 7px;
+  letter-spacing: 0.14em;
+  color: rgba(232, 221, 196, 0.35);
+}
+body.mobile .roster-grid { padding-bottom: 66px; }
+body.mobile .roster-actions { bottom: 0; }
+body.mobile .guide-panel { padding-bottom: 64px; }
+body.mobile .story-panel {
+  max-height: 96dvh;
+  padding: 10px 14px 18px;
+}
+body.mobile .story-head h2 { font-size: 23px; letter-spacing: 0.12em; }
+body.mobile .story-head .eyebrow { font-size: 8px; }
+body.mobile .story-quote {
+  margin-top: 4px;
+  max-height: 34px;
+  overflow: hidden;
+  font-size: 9.5px;
+  line-height: 1.5;
+}
+body.mobile .story-route { margin-top: 5px; gap: 8px; font-size: 7px; }
+body.mobile .story-choices { gap: 5px; margin-top: 6px; }
+body.mobile .story-choice { padding: 6px 10px; }
+body.mobile .story-choice h3 { font-size: 13px; margin: 1px 0; }
+body.mobile .story-choice p { font-size: 8.5px; line-height: 1.38; }
+body.mobile .story-choice .choice-index { font-size: 9px; }
+body.mobile .story-foot { display: none; }
+body.mobile .reward-cards { max-height: 50dvh; }
+body.mobile .reward-swipe {
+  display: block;
+  margin: 3px 0 2px;
+  text-align: center;
+  font-family: var(--serif-en);
+  font-size: 7px;
+  letter-spacing: 0.14em;
+  color: rgba(232, 221, 196, 0.38);
+}
+body.mobile .reward-inner { max-height: 96dvh; padding-bottom: 14px; }
+body.mobile .modal { max-height: 96dvh; }
+body.mobile .modal-actions { position: sticky; bottom: 0; background: rgba(8, 6, 10, 0.94); }
+body.mobile .stats { gap: 0; }
+body.mobile .stats .stat { padding: 7px 4px; }
+body.mobile .stats .stat b { font-size: 14px; }
+body.mobile #rotate-hint { display: none; }
+body.mobile.portrait #rotate-hint { display: flex; }
 
 
 /* ================= CINEMATIC COMIC ================= */
@@ -3046,6 +3110,7 @@ body.mobile .cinema-caption { font-size: 14px; }
           <h2>衣帽间</h2>
           <p class="sub">从今晚的战利品里，挑一件穿上。</p>
           <div id="reward-cards" class="reward-cards"></div>
+          <div class="reward-swipe">上下滑动查看全部三件 · SWIPE TO SEE ALL</div>
           <div class="reward-actions">
             <span class="pearls"><span class="stat-icon">◈</span> <b id="reward-pearls">0</b></span>
             <button type="button" id="reroll-btn" class="deco-btn small">重掷 <span class="en">REROLL</span> · 3</button>
@@ -8871,7 +8936,174 @@ body.mobile .cinema-caption { font-size: 14px; }
     S.storyChoices[S.storyIndex] = { id: c.id, flag: c.flag, title: c.title };
     S.floorIndex = S.storyIndex;
     audio('reward');
-    enterFloorIntro();
+    if (S.pendingDoor) {
+      S.pendingDoor = false;
+      openStairDoor();
+    } else {
+      enterFloorIntro();
+    }
+  }
+
+  function openStairDoor() {
+    const to = D.FLOORS[S.floorIndex] || D.FLOORS[0];
+    S.mode = 'playing';
+    S.door = {
+      x: 640, y: 120, w: 132, h: 122,
+      active: true, t: 0, delay: 0.8,
+      toIndex: S.floorIndex,
+      toName: to.name || '下一层',
+      toEn: to.en || 'NEXT FLOOR'
+    };
+    S.doorT = 0;
+    S.enemies = [];
+    S.bullets = [];
+    S.pools = [];
+    S.telegraphs = [];
+    S.pickups = [];
+    S.slashes = [];
+    S.boss = null;
+    S.bossDefeated = false;
+    S.floorClearing = true;
+    S.spawnDelay = 999;
+    S.player.x = clamp(S.player.x, 220, W - 220);
+    S.player.y = Math.max(S.player.y, 390);
+    S.player.invuln = Math.max(S.player.invuln, 2);
+    S.player.blocking = false;
+    S.player.blockHeld = false;
+    S.player.blockRelease = 0;
+    S.player.hurtFlash = 0;
+    hideScreens();
+    syncHud();
+    dom.hud.classList.remove('hidden');
+    dom.bossWrap.classList.add('hidden');
+    addParticle('ring', { x: 640, y: 190, r0: 16, r1: 108, life: 0.9, color: 'rgba(242,223,174,0.8)' });
+    for (let i = 0; i < 14; i++) {
+      addParticle('spark', {
+        x: 640 + rand(-58, 58), y: 178 + rand(-8, 16),
+        vx: rand(-20, 20), vy: rand(-42, -14), life: rand(0.7, 1.5),
+        color: i % 2 ? 'rgba(242,223,174,0.85)' : 'rgba(201,164,92,0.65)'
+      });
+    }
+    audio('reward');
+    toast('楼梯门已开启 · 走进门中', 3200);
+  }
+
+  function enterStairDoor() {
+    if (!S.door || S.mode !== 'playing') return;
+    S.door.active = false;
+    S.mode = 'door';
+    S.doorT = 0;
+    S.player.invuln = 9;
+    S.player.blockHeld = false;
+    S.player.blocking = false;
+    audio('glass');
+    addParticle('ring', { x: S.door.x, y: S.door.y + 70, r0: 20, r1: 150, life: 0.7, color: 'rgba(242,223,174,0.9)' });
+  }
+
+  function updateStairDoor(dt) {
+    if (!S.door || !S.door.active) return;
+    const d = S.door;
+    d.t += dt;
+    d.delay = Math.max(0, d.delay - dt);
+    if (d.delay > 0) return;
+    const p = S.player;
+    if (!p) return;
+    const inX = Math.abs(p.x - d.x) < d.w * 0.36;
+    const inY = p.y < d.y + d.h + 22;
+    if (inX && inY) enterStairDoor();
+  }
+
+  function drawStairDoor(d, t) {
+    const x = d.x - d.w / 2;
+    const y = d.y;
+    const w = d.w;
+    const h = d.h;
+    const pulse = 0.5 + 0.5 * Math.sin(t * 2.2);
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const glow = ctx.createRadialGradient(d.x, y + h * 0.42, 8, d.x, y + h * 0.42, 160);
+    glow.addColorStop(0, 'rgba(242,223,174,' + (0.14 + pulse * 0.08) + ')');
+    glow.addColorStop(1, 'rgba(242,223,174,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(d.x - 180, y - 30, 360, h + 160);
+    ctx.restore();
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x, y + h);
+    ctx.lineTo(x, y + 42);
+    ctx.quadraticCurveTo(x, y, d.x, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + 42);
+    ctx.lineTo(x + w, y + h);
+    ctx.closePath();
+    const inner = ctx.createLinearGradient(0, y, 0, y + h);
+    inner.addColorStop(0, 'rgba(28,20,16,0.98)');
+    inner.addColorStop(0.55, 'rgba(10,8,9,0.98)');
+    inner.addColorStop(1, 'rgba(3,3,4,0.99)');
+    ctx.fillStyle = inner;
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(201,164,92,0.85)';
+    ctx.shadowColor = 'rgba(242,223,174,0.6)';
+    ctx.shadowBlur = 14;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    ctx.beginPath();
+    ctx.moveTo(x + 9, y + h - 4);
+    ctx.lineTo(x + 9, y + 44);
+    ctx.quadraticCurveTo(x + 9, y + 11, d.x, y + 11);
+    ctx.quadraticCurveTo(x + w - 9, y + 11, x + w - 9, y + 44);
+    ctx.lineTo(x + w - 9, y + h - 4);
+    ctx.strokeStyle = 'rgba(242,223,174,0.24)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    for (let i = 0; i < 5; i++) {
+      const sy = y + h - 6 - i * 13;
+      const inset = i * 9;
+      ctx.beginPath();
+      ctx.moveTo(x + 14 + inset, sy);
+      ctx.lineTo(x + w - 14 - inset, sy);
+      ctx.strokeStyle = 'rgba(201,164,92,' + (0.12 + i * 0.035) + ')';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    const beam = ctx.createLinearGradient(0, y + h, 0, y + h + 96);
+    beam.addColorStop(0, 'rgba(242,223,174,0.18)');
+    beam.addColorStop(1, 'rgba(242,223,174,0)');
+    ctx.fillStyle = beam;
+    ctx.beginPath();
+    ctx.moveTo(x + 8, y + h);
+    ctx.lineTo(x + w - 8, y + h);
+    ctx.lineTo(d.x + 86, y + h + 96);
+    ctx.lineTo(d.x - 86, y + h + 96);
+    ctx.closePath();
+    ctx.fill();
+
+    for (let i = 0; i < 7; i++) {
+      const px = d.x + Math.sin(t * 0.8 + i * 1.7) * (24 + i * 7);
+      const py = y + 24 + ((t * 16 + i * 27) % (h - 18));
+      ctx.fillStyle = 'rgba(242,223,174,' + (0.12 + (i % 3) * 0.05) + ')';
+      ctx.beginPath();
+      ctx.arc(px, py, 1.2 + (i % 2), 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(242,223,174,0.92)';
+    ctx.font = '600 11px "Bodoni MT", "Times New Roman", serif';
+    ctx.fillText('STAIRS  ·  ' + d.toEn, d.x, y - 18);
+    ctx.fillStyle = 'rgba(232,221,196,0.72)';
+    ctx.font = '12px "Songti SC", "Noto Serif SC", serif';
+    ctx.fillText('通往 ' + d.toName, d.x, y - 3);
+
+    if (!d.active) {
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.fillRect(x, y, w, h);
+    }
+    ctx.restore();
   }
 
   function skipStory() {
@@ -9017,6 +9249,9 @@ body.mobile .cinema-caption { font-size: 14px; }
   }
 
   function enterFloorIntro() {
+    S.pendingDoor = false;
+    S.door = null;
+    S.doorT = 0;
     S.floor = D.FLOORS[S.floorIndex];
     S.rule = (S.floorIndex > 0 && !S.floor.boss) ? pick(D.RULES) : null;
     S.player.floorSlowUsed = false;
@@ -9048,6 +9283,9 @@ body.mobile .cinema-caption { font-size: 14px; }
     S.banked = 0;
     S.bankSettled = false;
     S.bossVariant = null;
+    S.pendingDoor = false;
+    S.door = null;
+    S.doorT = 0;
     S.slowmo = 0;
     dom.ultimateTint.classList.remove('on');
     S.kills = 0;
@@ -9298,6 +9536,7 @@ body.mobile .cinema-caption { font-size: 14px; }
       win();
       return;
     }
+    S.pendingDoor = true;
     showStory(S.floorIndex);
   }
 
@@ -10108,7 +10347,7 @@ body.mobile .cinema-caption { font-size: 14px; }
       }
     }
 
-    if (IS_MOBILE) {
+    if (IS_MOBILE && !S.door) {
       let best = Infinity, tx = null, ty = null;
       const consider = (o) => {
         if (!o || o.dead) return;
@@ -10164,8 +10403,13 @@ body.mobile .cinema-caption { font-size: 14px; }
       }
     }
 
-    if (S.mouse.left) tryMelee();
-    if (S.mouse.right) tryThrow();
+    if (S.door) {
+      p.aim = Math.atan2(S.door.y + 70 - p.y, S.door.x - p.x);
+      updateStairDoor(dt);
+    } else {
+      if (S.mouse.left) tryMelee();
+      if (S.mouse.right) tryThrow();
+    }
   }
 
   /* ---------------------------- combat ---------------------------- */
@@ -11059,6 +11303,12 @@ body.mobile .cinema-caption { font-size: 14px; }
       }
       S.shake = Math.max(0, S.shake - dt * 32);
       if (S.player.hp <= 0) die();
+    } else if (S.mode === 'door') {
+      S.doorT += dt;
+      updateParticles(dt);
+      updateTelegraphs(dt);
+      S.shake = Math.max(0, S.shake - dt * 26);
+      if (S.doorT > 0.62) enterFloorIntro();
     } else if (S.mode === 'bossDying') {
       updateParticles(dt);
       updateTelegraphs(dt);
@@ -11186,6 +11436,7 @@ body.mobile .cinema-caption { font-size: 14px; }
     S.pools.forEach((po) => CEN.draw.pool(ctx, po, S.t));
     S.pickups.forEach((pk) => CEN.draw.pickup(ctx, pk, S.t));
     S.telegraphs.forEach((tg) => CEN.draw.telegraph(ctx, tg, S.t));
+    if (S.door) drawStairDoor(S.door, S.t);
 
     const drawables = [];
     S.enemies.forEach((e) => {
@@ -11275,6 +11526,10 @@ body.mobile .cinema-caption { font-size: 14px; }
     if (S.player && S.mode === 'playing') {
       CEN.draw.reticle(ctx, S.mouse.x, S.mouse.y, S.t);
     }
+    if (S.mode === 'door') {
+      ctx.fillStyle = 'rgba(5,4,7,' + clamp(S.doorT / 0.62, 0, 1) + ')';
+      ctx.fillRect(0, 0, W, H);
+    }
     ctx.restore();
   }
 
@@ -11290,7 +11545,7 @@ body.mobile .cinema-caption { font-size: 14px; }
     if (!S.moveSheetOpen && S.mode === 'intro') {
       S.introT -= realDt;
       if (S.introT <= 0) beginFloor();
-    } else if (!S.moveSheetOpen && (S.mode === 'playing' || S.mode === 'bossDying' || S.mode === 'collecting')) {
+    } else if (!S.moveSheetOpen && (S.mode === 'playing' || S.mode === 'door' || S.mode === 'bossDying' || S.mode === 'collecting')) {
       if (S.slowmo > 0) {
         S.slowmo = Math.max(0, S.slowmo - realDt);
         update(realDt * 0.35);
